@@ -15,6 +15,8 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-ayotte-precourse.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-invitation-manager.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-email-sender.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-admin-panel.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-form-manager.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-progress-tracker.php';
 
 // Logging
 if (!function_exists('ayotte_log_message')) {
@@ -36,6 +38,9 @@ function ayotte_precourse_init() {
     ayotte_log_message('INFO', 'Ayotte Precourse Portal plugin initializing...');
     $plugin = new Ayotte_Precourse();
     $plugin->run();
+    (new Ayotte_Admin_Panel())->init();
+    (new Ayotte_Form_Manager())->init();
+    (new Ayotte_Progress_Tracker())->init();
 }
 add_action('plugins_loaded', 'ayotte_precourse_init');
 
@@ -45,4 +50,21 @@ register_activation_hook(__FILE__, function() {
     flush_rewrite_rules();
 });
 register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
+
+// Daily progress reminder
+if (!wp_next_scheduled('ayotte_progress_reminder')) {
+    wp_schedule_event(time(), 'daily', 'ayotte_progress_reminder');
+}
+add_action('ayotte_progress_reminder', 'ayotte_send_progress_reminders');
+
+function ayotte_send_progress_reminders() {
+    $users = get_users(['meta_key' => 'ayotte_precourse_token']);
+    foreach ($users as $user) {
+        $progress = get_user_meta($user->ID, 'ayotte_progress', true);
+        if ($progress !== 'complete') {
+            $emailer = new Ayotte_Email_Sender();
+            $emailer->send_email($user->user_email, 'Reminder', 'Please complete your precourse forms.');
+        }
+    }
+}
 ?>

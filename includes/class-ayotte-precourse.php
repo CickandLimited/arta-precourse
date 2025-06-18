@@ -27,31 +27,28 @@ class Ayotte_Precourse {
             'precourse-debug-console',
             [new Ayotte_Admin_Panel(), 'render_debug_console']
         );
+
+        add_submenu_page(
+            'ayotte-precourse',
+            'Student Progress',
+            'Student Progress',
+            'manage_options',
+            'precourse-progress',
+            [new Ayotte_Admin_Panel(), 'render_tracking_dashboard']
+        );
+
+        add_submenu_page(
+            'ayotte-precourse',
+            'Form Sets',
+            'Form Sets',
+            'manage_options',
+            'precourse-form-sets',
+            [new Ayotte_Admin_Panel(), 'render_form_sets_page']
+        );
     }
 
     public function render_main_panel() {
-        ?>
-        <div class="wrap">
-            <h1>Ayotte Precourse Portal</h1>
-            <p>Invite attendees by email and track progress.</p>
-            <h2>Send Invitation</h2>
-            <input type="email" id="inviteEmail" placeholder="Enter email address" style="width:300px;" />
-            <button id="sendInviteBtn">Send Invite</button>
-            <p id="inviteResult"></p>
-            <script>
-                document.getElementById('sendInviteBtn').onclick = async () => {
-                    const email = document.getElementById('inviteEmail').value.trim();
-                    if (!email) {
-                        document.getElementById('inviteResult').textContent = 'Please enter an email address.';
-                        return;
-                    }
-                    const res = await fetch(ajaxurl + '?action=ayotte_send_invite_email&email=' + encodeURIComponent(email));
-                    const data = await res.json();
-                    document.getElementById('inviteResult').textContent = data.success ? 'Invitation sent!' : 'Failed to send invitation.';
-                };
-            </script>
-        </div>
-        <?php
+        (new Ayotte_Admin_Panel())->render_invite_panel();
     }
 
     public function add_rewrite_rules() {
