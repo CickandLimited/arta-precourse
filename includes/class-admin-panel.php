@@ -317,4 +317,4 @@ class Ayotte_Admin_Panel {
     }
 
 }
-?>
+

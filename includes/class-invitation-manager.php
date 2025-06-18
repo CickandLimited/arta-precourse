@@ -58,4 +58,4 @@ class Invitation_Manager {
         return $sent;
     }
 }
-?>
+
