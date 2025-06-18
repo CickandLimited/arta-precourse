@@ -70,7 +70,7 @@ class Ayotte_Admin_Panel {
      * Display a simple progress dashboard
      */
     public function render_tracking_dashboard() {
-        if (!current_user_can('manage_options')) wp_die('Forbidden');
+        if (!current_user_can(AYOTTE_PRECOURSE_CAPABILITY)) wp_die('Forbidden');
         $users = get_users(['meta_key' => 'ayotte_precourse_token']);
         $forms = get_posts(['post_type' => 'ayotte_form', 'numberposts' => -1]);
 
@@ -185,7 +185,7 @@ class Ayotte_Admin_Panel {
     }
 
     public function send_invite_email() {
-    if (!current_user_can('manage_options')) wp_die('Forbidden');
+    if (!current_user_can(AYOTTE_PRECOURSE_CAPABILITY)) wp_die('Forbidden');
     $email = sanitize_email($_GET['email'] ?? '');
     if (!$email) {
         wp_send_json_error(['message' => 'Invalid email']);
@@ -199,7 +199,7 @@ class Ayotte_Admin_Panel {
      * AJAX handler for sending multiple invites at once.
      */
     public function send_bulk_invites() {
-        if (!current_user_can('manage_options')) wp_die('Forbidden');
+        if (!current_user_can(AYOTTE_PRECOURSE_CAPABILITY)) wp_die('Forbidden');
         $body = json_decode(file_get_contents('php://input'), true);
         $emails = array_filter(array_map('sanitize_email', $body['emails'] ?? []));
         $count  = 0;
@@ -213,7 +213,7 @@ class Ayotte_Admin_Panel {
     }
 
     public function set_assigned_forms() {
-        if (!current_user_can('manage_options')) wp_die('Forbidden');
+        if (!current_user_can(AYOTTE_PRECOURSE_CAPABILITY)) wp_die('Forbidden');
         $user_ids = array_map('intval', $_POST['user_ids'] ?? []);
         $forms    = array_map('intval', $_POST['forms'] ?? []);
         foreach ($user_ids as $uid) {
@@ -223,7 +223,7 @@ class Ayotte_Admin_Panel {
     }
 
     public function bulk_modify_forms() {
-        if (!current_user_can('manage_options')) wp_die('Forbidden');
+        if (!current_user_can(AYOTTE_PRECOURSE_CAPABILITY)) wp_die('Forbidden');
         $user_ids = array_map('intval', $_POST['user_ids'] ?? []);
         $form_id  = intval($_POST['form_id'] ?? 0);
         $mode     = sanitize_text_field($_POST['mode'] ?? 'assign');
@@ -243,7 +243,7 @@ class Ayotte_Admin_Panel {
      * Render the Form Builder page for creating custom forms.
      */
     public function render_form_builder() {
-        if (!current_user_can('manage_options')) wp_die('Forbidden');
+        if (!current_user_can(AYOTTE_PRECOURSE_CAPABILITY)) wp_die('Forbidden');
 
         $edit_id = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
 
