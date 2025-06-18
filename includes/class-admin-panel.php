@@ -34,11 +34,75 @@ class Ayotte_Admin_Panel {
         <?php
     }
 
+    /**
+     * Render the main invite panel with support for bulk email sending.
+     */
+    public function render_invite_panel() {
+        ?>
+        <div class="wrap">
+            <h1>Ayotte Precourse Portal</h1>
+            <p>Invite attendees by email and track progress.</p>
+            <h2>Send Invitations</h2>
+            <textarea id="inviteEmails" placeholder="Enter one email per line" rows="5" style="width:300px;"></textarea>
+            <button id="sendBulkInvites">Send Invites</button>
+            <p id="bulkResult"></p>
+        </div>
+        <script>
+        document.getElementById('sendBulkInvites').onclick = async () => {
+            const emails = document.getElementById('inviteEmails').value.split(/\n|,/).map(e => e.trim()).filter(e => e);
+            if(!emails.length) {
+                document.getElementById('bulkResult').textContent = 'Please enter at least one email.';
+                return;
+            }
+            const res = await fetch(ajaxurl + '?action=ayotte_send_bulk_invites', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ emails })
+            });
+            const data = await res.json();
+            document.getElementById('bulkResult').textContent = data.data.message;
+        };
+        </script>
+        <?php
+    }
+
+    /**
+     * Display a simple progress dashboard
+     */
+    public function render_tracking_dashboard() {
+        $users = get_users(['meta_key' => 'ayotte_precourse_token']);
+        echo '<div class="wrap"><h1>Student Progress</h1><table class="widefat"><thead><tr><th>Email</th><th>Progress</th></tr></thead><tbody>';
+        foreach ($users as $user) {
+            $progress = get_user_meta($user->ID, 'ayotte_progress', true);
+            echo '<tr><td>' . esc_html($user->user_email) . '</td><td>' . esc_html($progress ?: '0%') . '</td></tr>';
+        }
+        echo '</tbody></table></div>';
+    }
+
+    /**
+     * Simple page for managing optional form sets
+     */
+    public function render_form_sets_page() {
+        if (isset($_POST['new_set']) && check_admin_referer('ayotte_form_sets')) {
+            $sets = get_option('ayotte_form_sets', []);
+            $sets[] = sanitize_text_field($_POST['new_set']);
+            update_option('ayotte_form_sets', $sets);
+        }
+        $sets = get_option('ayotte_form_sets', []);
+        echo '<div class="wrap"><h1>Form Sets</h1><form method="post">';
+        wp_nonce_field('ayotte_form_sets');
+        echo '<input type="text" name="new_set" placeholder="Form set name" />';
+        echo '<button type="submit" class="button">Add</button></form><ul>';
+        foreach ($sets as $set) echo '<li>' . esc_html($set) . '</li>';
+        echo '</ul></div>';
+    }
+
     public function init() {
         add_action('wp_ajax_ayotte_fetch_logs', [$this, 'fetch_logs']);
         add_action('wp_ajax_ayotte_clear_logs', [$this, 'clear_logs']);
         add_action('wp_ajax_ayotte_send_test_invite', [$this, 'send_test_invite']);
         add_action('wp_ajax_ayotte_send_invite_email', [$this, 'send_invite_email']);
+        add_action('wp_ajax_ayotte_send_bulk_invites', [$this, 'send_bulk_invites']);
     }
 
     public function fetch_logs() {
@@ -71,6 +135,23 @@ class Ayotte_Admin_Panel {
         wp_send_json_success(['message' => "Invitation sent to $email"]);
     }
 }
+
+    /**
+     * AJAX handler for sending multiple invites at once.
+     */
+    public function send_bulk_invites() {
+        if (!current_user_can('manage_options')) wp_die('Forbidden');
+        $body = json_decode(file_get_contents('php://input'), true);
+        $emails = array_filter(array_map('sanitize_email', $body['emails'] ?? []));
+        $count  = 0;
+        foreach ($emails as $email) {
+            if ($email) {
+                (new Invitation_Manager())->send_invite_email($email);
+                $count++;
+            }
+        }
+        wp_send_json_success(['message' => "Sent $count invitations"]);
+    }
 
 }
 ?>
