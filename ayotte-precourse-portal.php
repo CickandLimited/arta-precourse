@@ -37,6 +37,10 @@ if (!function_exists('ayotte_log_message')) {
 // Plugin Initialization with verbose logging restored
 function ayotte_precourse_init() {
     ayotte_log_message('INFO', 'Ayotte Precourse Portal plugin initializing...');
+    $admin = get_role('administrator');
+    if ($admin && !$admin->has_cap(AYOTTE_PRECOURSE_CAPABILITY)) {
+        $admin->add_cap(AYOTTE_PRECOURSE_CAPABILITY);
+    }
     $plugin = new Ayotte_Precourse();
     $plugin->run();
     (new Ayotte_Admin_Panel())->init();
@@ -94,4 +98,4 @@ function ayotte_send_progress_reminders() {
         }
     }
 }
-?>
+
