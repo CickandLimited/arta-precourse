@@ -1,9 +1,5 @@
 <?php
 class Ayotte_Precourse {
-
-
-    public function add_menu() {
-        add_menu_page(
             'Precourse Portal',
             'Precourse Portal',
             'manage_options',
@@ -37,25 +33,18 @@ class Ayotte_Precourse {
             'Form Sets',
             'manage_options',
             'precourse-form-sets',
-            [new Ayotte_Admin_Panel(), 'render_form_sets_page']
-        );
-    }
-
-    public function render_main_panel() {
-        (new Ayotte_Admin_Panel())->render_invite_panel();
-    }
-
-    public function add_rewrite_rules() {
-        add_rewrite_rule('^precourse-invite/?(.*)', 'index.php?precourse_invite=1', 'top');
-        add_rewrite_tag('%precourse_invite%', '1');
-        ayotte_log_message('INFO', 'Rewrite rules added');
-    }
-
-    public function handle_token_redirect() {
         if (get_query_var('precourse_invite') == '1') {
             $token = sanitize_text_field($_GET['token'] ?? '');
             $manager = new Invitation_Manager();
             $email = $manager->validate_token($token);
+            if ($email) {
+                ayotte_log_message('INFO', "Token valid for email: $email");
+            } else {
+                ayotte_log_message('ERROR', "Invalid or expired token: $token");
+            }
+            wp_redirect(wp_login_url());
+            exit;
+        }
             if ($email) {
                 ayotte_log_message('INFO', "Token valid for email: $email");
             } else {
