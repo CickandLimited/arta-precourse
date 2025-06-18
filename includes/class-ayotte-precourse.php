@@ -1,16 +1,6 @@
 <?php
 class Ayotte_Precourse {
-    public function run() {
-        add_action('init', [$this, 'add_rewrite_rules']);
-        add_action('template_redirect', [$this, 'handle_token_redirect']);
-        add_action('admin_menu', [$this, 'add_menu']);
-        add_action('user_register', [$this, 'link_token_to_user'], 10, 1);
-        add_action('user_register', [$this, 'auto_login_after_register'], 20, 1);
-        add_action('register_form', [$this, 'prefill_registration']);
-        add_filter('registration_redirect', [$this, 'registration_redirect']);
-        add_filter('wp_nav_menu_items', [$this, 'add_student_portal_menu'], 10, 2);
-        add_filter('login_redirect', [$this, 'customer_login_redirect'], 10, 3);
-    }
+
 
     public function add_menu() {
         add_menu_page(
@@ -67,19 +57,12 @@ class Ayotte_Precourse {
             $manager = new Invitation_Manager();
             $email = $manager->validate_token($token);
             if ($email) {
-                if (!session_id()) session_start();
-                $_SESSION['ayotte_precourse_email'] = $email;
-                $_SESSION['ayotte_precourse_token'] = $token;
                 ayotte_log_message('INFO', "Token valid for email: $email");
-                $reg_url = wp_registration_url();
-                $query   = '?email=' . urlencode($email) . '&token=' . urlencode($token);
-                wp_redirect($reg_url . $query);
-                exit;
             } else {
                 ayotte_log_message('ERROR', "Invalid or expired token: $token");
-                wp_redirect(site_url('/error-page?reason=invalid-token'));
-                exit;
             }
+            wp_redirect(wp_login_url());
+            exit;
         }
     }
 
