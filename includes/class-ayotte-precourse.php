@@ -19,7 +19,7 @@ class Ayotte_Precourse {
         add_menu_page(
             'Precourse Portal',
             'Precourse Portal',
-            'manage_options',
+            AYOTTE_PRECOURSE_CAPABILITY,
             'ayotte-precourse',
             [$this, 'render_main_panel'],
             'dashicons-welcome-learn-more',
@@ -30,7 +30,7 @@ class Ayotte_Precourse {
             'ayotte-precourse',
             'Debug Console',
             'Debug Console',
-            'manage_options',
+            AYOTTE_PRECOURSE_CAPABILITY,
             'precourse-debug-console',
             [new Ayotte_Admin_Panel(), 'render_debug_console']
         );
@@ -39,7 +39,7 @@ class Ayotte_Precourse {
             'ayotte-precourse',
             'Student Progress',
             'Student Progress',
-            'manage_options',
+            AYOTTE_PRECOURSE_CAPABILITY,
             'precourse-progress',
             [new Ayotte_Admin_Panel(), 'render_tracking_dashboard']
         );
@@ -48,7 +48,7 @@ class Ayotte_Precourse {
             'ayotte-precourse',
             'Form Sets',
             'Form Sets',
-            'manage_options',
+            AYOTTE_PRECOURSE_CAPABILITY,
             'precourse-form-sets',
             [new Ayotte_Admin_Panel(), 'render_form_sets_page']
         );
@@ -57,7 +57,7 @@ class Ayotte_Precourse {
             'ayotte-precourse',
             'Form Builder',
             'Form Builder',
-            'manage_options',
+            AYOTTE_PRECOURSE_CAPABILITY,
             'precourse-form-builder',
             [new Ayotte_Admin_Panel(), 'render_form_builder']
         );
@@ -173,20 +173,20 @@ class Ayotte_Precourse {
         ];
 
         $caps = [
-            'edit_post'              => 'manage_options',
+            'edit_post'              => AYOTTE_PRECOURSE_CAPABILITY,
             'read_post'              => 'read',
-            'delete_post'            => 'manage_options',
-            'edit_posts'             => 'manage_options',
-            'edit_others_posts'      => 'manage_options',
-            'publish_posts'          => 'manage_options',
-            'read_private_posts'     => 'manage_options',
-            'delete_posts'           => 'manage_options',
-            'delete_private_posts'   => 'manage_options',
-            'delete_published_posts' => 'manage_options',
-            'delete_others_posts'    => 'manage_options',
-            'edit_private_posts'     => 'manage_options',
-            'edit_published_posts'   => 'manage_options',
-            'create_posts'           => 'manage_options',
+            'delete_post'            => AYOTTE_PRECOURSE_CAPABILITY,
+            'edit_posts'             => AYOTTE_PRECOURSE_CAPABILITY,
+            'edit_others_posts'      => AYOTTE_PRECOURSE_CAPABILITY,
+            'publish_posts'          => AYOTTE_PRECOURSE_CAPABILITY,
+            'read_private_posts'     => AYOTTE_PRECOURSE_CAPABILITY,
+            'delete_posts'           => AYOTTE_PRECOURSE_CAPABILITY,
+            'delete_private_posts'   => AYOTTE_PRECOURSE_CAPABILITY,
+            'delete_published_posts' => AYOTTE_PRECOURSE_CAPABILITY,
+            'delete_others_posts'    => AYOTTE_PRECOURSE_CAPABILITY,
+            'edit_private_posts'     => AYOTTE_PRECOURSE_CAPABILITY,
+            'edit_published_posts'   => AYOTTE_PRECOURSE_CAPABILITY,
+            'create_posts'           => AYOTTE_PRECOURSE_CAPABILITY,
         ];
 
         register_post_type('ayotte_form', [
@@ -239,7 +239,7 @@ class Ayotte_Precourse {
     public function save_form_meta($post_id) {
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
         if (!isset($_POST['ayotte_form_meta_nonce']) || !wp_verify_nonce($_POST['ayotte_form_meta_nonce'], 'ayotte_form_meta')) return;
-        if (!current_user_can('manage_options')) return;
+        if (!current_user_can(AYOTTE_PRECOURSE_CAPABILITY)) return;
 
         if (isset($_POST['ayotte_form_fields'])) {
             update_post_meta($post_id, 'ayotte_form_fields', wp_unslash($_POST['ayotte_form_fields']));
