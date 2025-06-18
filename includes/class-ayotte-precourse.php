@@ -1,13 +1,5 @@
 <?php
 class Ayotte_Precourse {
-    public function run() {
-        add_action('init', [$this, 'add_rewrite_rules']);
-        add_action('template_redirect', [$this, 'handle_token_redirect']);
-        add_action('admin_menu', [$this, 'add_menu']);
-    }
-
-    public function add_menu() {
-        add_menu_page(
             'Precourse Portal',
             'Precourse Portal',
             'manage_options',
@@ -41,25 +33,18 @@ class Ayotte_Precourse {
             'Form Sets',
             'manage_options',
             'precourse-form-sets',
-            [new Ayotte_Admin_Panel(), 'render_form_sets_page']
-        );
-    }
-
-    public function render_main_panel() {
-        (new Ayotte_Admin_Panel())->render_invite_panel();
-    }
-
-    public function add_rewrite_rules() {
-        add_rewrite_rule('^precourse-invite/?(.*)', 'index.php?precourse_invite=1', 'top');
-        add_rewrite_tag('%precourse_invite%', '1');
-        ayotte_log_message('INFO', 'Rewrite rules added');
-    }
-
-    public function handle_token_redirect() {
         if (get_query_var('precourse_invite') == '1') {
             $token = sanitize_text_field($_GET['token'] ?? '');
             $manager = new Invitation_Manager();
             $email = $manager->validate_token($token);
+            if ($email) {
+                ayotte_log_message('INFO', "Token valid for email: $email");
+            } else {
+                ayotte_log_message('ERROR', "Invalid or expired token: $token");
+            }
+            wp_redirect(wp_login_url());
+            exit;
+        }
             if ($email) {
                 ayotte_log_message('INFO', "Token valid for email: $email");
             } else {
@@ -102,6 +87,30 @@ class Ayotte_Precourse {
     public function registration_redirect($redirect_to) {
         if (!session_id()) session_start();
         if (isset($_SESSION['ayotte_precourse_token'])) {
+            return site_url('/precourse-forms');
+        }
+        return $redirect_to;
+    }
+
+    /**
+     * Append a "Student Portal" menu item for logged-in customers.
+     */
+    public function add_student_portal_menu($items, $args) {
+        if (is_user_logged_in()) {
+            $user = wp_get_current_user();
+            if (in_array('customer', (array) $user->roles, true)) {
+                $url   = esc_url(site_url('/precourse-forms'));
+                $items .= '<li class="menu-item menu-item-student-portal"><a href="' . $url . '">Student Portal</a></li>';
+            }
+        }
+        return $items;
+    }
+
+    /**
+     * Redirect customers to the student portal after login.
+     */
+    public function customer_login_redirect($redirect_to, $requested, $user) {
+        if ($user instanceof WP_User && in_array('customer', (array) $user->roles, true)) {
             return site_url('/precourse-forms');
         }
         return $redirect_to;
