@@ -12,5 +12,12 @@ class Ayotte_Email_Sender {
         $message = "Hi,\n\nPlease complete your registration here:\n$link\n\nThanks,\nAyotte Training";
         return $this->send_email($email, $subject, $message);
     }
+
+    public function send_credentials($email, $password) {
+        $login_link = wp_login_url(site_url('/precourse-forms'));
+        $subject = 'Your Precourse Portal Account';
+        $message = "Hi,\n\nYour account has been created.\nUsername: $email\nPassword: $password\nLogin here: $login_link\n\nThanks,\nAyotte Training";
+        return $this->send_email($email, $subject, $message);
+    }
 }
 ?>
