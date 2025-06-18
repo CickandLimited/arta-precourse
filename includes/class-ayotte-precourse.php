@@ -34,20 +34,23 @@ class Ayotte_Precourse {
         <div class="wrap">
             <h1>Ayotte Precourse Portal</h1>
             <p>Invite attendees by email and track progress.</p>
-            <h2>Send Invitation</h2>
-            <input type="email" id="inviteEmail" placeholder="Enter email address" style="width:300px;" />
-            <button id="sendInviteBtn">Send Invite</button>
-            <p id="inviteResult"></p>
-            <script>
-                document.getElementById('sendInviteBtn').onclick = async () => {
-                    const email = document.getElementById('inviteEmail').value.trim();
-                    if (!email) {
-                        document.getElementById('inviteResult').textContent = 'Please enter an email address.';
+        <h2>Send Invitations</h2>
+        <textarea id="inviteEmails" placeholder="Enter email addresses separated by newlines" rows="5" style="width:300px;"></textarea>
+        <p><button id="sendInviteBtn">Send Invites</button></p>
+        <p id="inviteResult"></p>
+        <script>
+            document.getElementById('sendInviteBtn').onclick = async () => {
+                    const emails = document.getElementById('inviteEmails').value.trim();
+                    if (!emails) {
+                        document.getElementById('inviteResult').textContent = 'Please enter at least one email address.';
                         return;
                     }
-                    const res = await fetch(ajaxurl + '?action=ayotte_send_invite_email&email=' + encodeURIComponent(email));
+                    const formData = new FormData();
+                    formData.append('action', 'ayotte_send_bulk_invites');
+                    formData.append('emails', emails);
+                    const res = await fetch(ajaxurl, { method: 'POST', body: formData });
                     const data = await res.json();
-                    document.getElementById('inviteResult').textContent = data.success ? 'Invitation sent!' : 'Failed to send invitation.';
+                    document.getElementById('inviteResult').textContent = data.success ? data.data.message : 'Failed to send invitations.';
                 };
             </script>
         </div>

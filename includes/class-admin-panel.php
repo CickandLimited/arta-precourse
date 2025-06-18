@@ -39,6 +39,7 @@ class Ayotte_Admin_Panel {
         add_action('wp_ajax_ayotte_clear_logs', [$this, 'clear_logs']);
         add_action('wp_ajax_ayotte_send_test_invite', [$this, 'send_test_invite']);
         add_action('wp_ajax_ayotte_send_invite_email', [$this, 'send_invite_email']);
+        add_action('wp_ajax_ayotte_send_bulk_invites', [$this, 'send_bulk_invites']);
     }
 
     public function fetch_logs() {
@@ -71,6 +72,25 @@ class Ayotte_Admin_Panel {
         wp_send_json_success(['message' => "Invitation sent to $email"]);
     }
 }
+
+    public function send_bulk_invites() {
+        if (!current_user_can('manage_options')) wp_die('Forbidden');
+        $emails_raw = isset($_POST['emails']) ? wp_unslash($_POST['emails']) : '';
+        $emails = array_filter(array_map('trim', preg_split('/\r?\n|,/', $emails_raw)));
+        if (empty($emails)) {
+            wp_send_json_error(['message' => 'No emails provided']);
+            return;
+        }
+        $manager = new Invitation_Manager();
+        $sent = 0;
+        foreach ($emails as $email) {
+            $email = sanitize_email($email);
+            if ($email && $manager->send_invite_email($email)) {
+                $sent++;
+            }
+        }
+        wp_send_json_success(['message' => "$sent invitation(s) sent"]);
+    }
 
 }
 ?>
