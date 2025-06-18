@@ -15,6 +15,8 @@ class Ayotte_Form_Manager {
      * Render simple precourse form with personal info and ID upload.
      */
     public function render_form() {
+        $fid = intval($_GET['fid'] ?? 0);
+        if ($fid) return $this->render_dynamic_form(['id' => $fid]);
         if (!is_user_logged_in()) return '<p>Please log in first.</p>';
         $user_id = get_current_user_id();
         $phone   = esc_attr(get_user_meta($user_id, 'ayotte_phone', true));
@@ -52,9 +54,21 @@ class Ayotte_Form_Manager {
      */
     public function render_dashboard() {
         if (!is_user_logged_in()) return '<p>Please log in first.</p>';
+        $user_id  = get_current_user_id();
+        $assigned = get_user_meta($user_id, 'ayotte_assigned_forms', true);
+        if (!is_array($assigned)) $assigned = [];
+
         ob_start();
         echo '<h2>Your Assigned Forms</h2><ul>';
-        echo '<li><a href="' . esc_url( site_url('/precourse-form') ) . '">Precourse Form</a></li>';
+        echo '<li><a href="' . esc_url(site_url('/precourse-form')) . '">Precourse Form</a></li>';
+        foreach ($assigned as $fid) {
+            $post = get_post($fid);
+            if (!$post) continue;
+            $completed = get_user_meta($user_id, 'ayotte_form_' . $fid . '_completed', true);
+            $status = $completed ? 'submitted' : 'not submitted';
+            $url = add_query_arg('fid', $fid, site_url('/precourse-form'));
+            echo '<li><a href="' . esc_url($url) . '">' . esc_html($post->post_title) . '</a> - ' . esc_html($status) . '</li>';
+        }
         echo '</ul>';
         return ob_get_clean();
     }
