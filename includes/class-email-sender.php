@@ -20,4 +20,4 @@ class Ayotte_Email_Sender {
         return $this->send_email($email, $subject, $message);
     }
 }
-?>
+
