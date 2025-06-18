@@ -136,6 +136,7 @@ class Ayotte_Form_Manager {
                     update_user_meta($user_id, $meta_key, $val);
                 }
             }
+            update_user_meta($user_id, 'ayotte_form_' . $form_id . '_completed', current_time('mysql'));
             wp_send_json_success(['message' => 'Saved']);
         }
 

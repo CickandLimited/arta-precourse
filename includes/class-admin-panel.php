@@ -70,13 +70,68 @@ class Ayotte_Admin_Panel {
      * Display a simple progress dashboard
      */
     public function render_tracking_dashboard() {
+        if (!current_user_can('manage_options')) wp_die('Forbidden');
         $users = get_users(['meta_key' => 'ayotte_precourse_token']);
-        echo '<div class="wrap"><h1>Student Progress</h1><table class="widefat"><thead><tr><th>Email</th><th>Progress</th></tr></thead><tbody>';
+        $forms = get_posts(['post_type' => 'ayotte_form', 'numberposts' => -1]);
+
+        echo '<div class="wrap"><h1>Student Progress</h1>';
+        echo '<div class="bulk-actions"><select id="ayotteBulkForm">';
+        foreach ($forms as $f) {
+            echo '<option value="' . esc_attr($f->ID) . '">' . esc_html($f->post_title) . '</option>';
+        }
+        echo '</select> <button id="ayotteBulkAssign" class="button">Assign</button>';
+        echo ' <button id="ayotteBulkRemove" class="button">Remove</button></div>';
+
+        echo '<table class="widefat"><thead><tr><th><input type="checkbox" id="ayotteSelectAll" /></th><th>Email</th><th>Progress</th><th>Forms</th></tr></thead><tbody>';
         foreach ($users as $user) {
             $progress = get_user_meta($user->ID, 'ayotte_progress', true);
-            echo '<tr><td>' . esc_html($user->user_email) . '</td><td>' . esc_html($progress ?: '0%') . '</td></tr>';
+            $assigned = get_user_meta($user->ID, 'ayotte_assigned_forms', true);
+            if (!is_array($assigned)) $assigned = [];
+            echo '<tr>';
+            echo '<td><input type="checkbox" class="ayotteUserSelect" value="' . esc_attr($user->ID) . '"></td>';
+            echo '<td>' . esc_html($user->user_email) . '</td>';
+            echo '<td>' . esc_html($progress ?: '0%') . '</td>';
+            echo '<td><select multiple class="ayotteUserForms" data-user="' . esc_attr($user->ID) . '">';
+            foreach ($forms as $f) {
+                $sel = in_array($f->ID, $assigned) ? ' selected' : '';
+                $completed = get_user_meta($user->ID, 'ayotte_form_' . $f->ID . '_completed', true) ? ' (done)' : '';
+                echo '<option value="' . esc_attr($f->ID) . '"' . $sel . '>' . esc_html($f->post_title . $completed) . '</option>';
+            }
+            echo '</select></td></tr>';
         }
         echo '</tbody></table></div>';
+
+        ?>
+        <script>
+        document.getElementById('ayotteSelectAll').onchange = function(){
+            document.querySelectorAll('.ayotteUserSelect').forEach(cb=>cb.checked = this.checked);
+        };
+        document.querySelectorAll('.ayotteUserForms').forEach(sel => {
+            sel.addEventListener('change', async function(){
+                const uid = this.dataset.user;
+                const forms = Array.from(this.selectedOptions).map(o => o.value);
+                const fd = new FormData();
+                fd.append('action','ayotte_set_assigned_forms');
+                fd.append('user_ids[]', uid);
+                forms.forEach(f => fd.append('forms[]', f));
+                await fetch(ajaxurl,{method:'POST', body: fd});
+            });
+        });
+        async function bulkModify(mode){
+            const ids = Array.from(document.querySelectorAll('.ayotteUserSelect:checked')).map(c=>c.value);
+            if(!ids.length) return;
+            const fd = new FormData();
+            fd.append('action','ayotte_bulk_modify_forms');
+            fd.append('mode',mode);
+            fd.append('form_id', document.getElementById('ayotteBulkForm').value);
+            ids.forEach(id => fd.append('user_ids[]', id));
+            await fetch(ajaxurl,{method:'POST', body: fd});
+            location.reload();
+        }
+        document.getElementById('ayotteBulkAssign').onclick = ()=>bulkModify('assign');
+        document.getElementById('ayotteBulkRemove').onclick = ()=>bulkModify('remove');
+        </script>
+        <?php
     }
 
     /**
@@ -103,6 +158,8 @@ class Ayotte_Admin_Panel {
         add_action('wp_ajax_ayotte_send_test_invite', [$this, 'send_test_invite']);
         add_action('wp_ajax_ayotte_send_invite_email', [$this, 'send_invite_email']);
         add_action('wp_ajax_ayotte_send_bulk_invites', [$this, 'send_bulk_invites']);
+        add_action('wp_ajax_ayotte_set_assigned_forms', [$this, 'set_assigned_forms']);
+        add_action('wp_ajax_ayotte_bulk_modify_forms', [$this, 'bulk_modify_forms']);
     }
 
     public function fetch_logs() {
@@ -151,6 +208,34 @@ class Ayotte_Admin_Panel {
             }
         }
         wp_send_json_success(['message' => "Sent $count invitations"]);
+    }
+
+    public function set_assigned_forms() {
+        if (!current_user_can('manage_options')) wp_die('Forbidden');
+        $user_ids = array_map('intval', $_POST['user_ids'] ?? []);
+        $forms    = array_map('intval', $_POST['forms'] ?? []);
+        foreach ($user_ids as $uid) {
+            update_user_meta($uid, 'ayotte_assigned_forms', $forms);
+        }
+        wp_send_json_success(['message' => 'updated']);
+    }
+
+    public function bulk_modify_forms() {
+        if (!current_user_can('manage_options')) wp_die('Forbidden');
+        $user_ids = array_map('intval', $_POST['user_ids'] ?? []);
+        $form_id  = intval($_POST['form_id'] ?? 0);
+        $mode     = sanitize_text_field($_POST['mode'] ?? 'assign');
+        foreach ($user_ids as $uid) {
+            $current = get_user_meta($uid, 'ayotte_assigned_forms', true);
+            if (!is_array($current)) $current = [];
+            if ($mode === 'assign') {
+                if (!in_array($form_id, $current, true)) $current[] = $form_id;
+            } else {
+                $current = array_diff($current, [$form_id]);
+            }
+            update_user_meta($uid, 'ayotte_assigned_forms', array_values($current));
+        }
+        wp_send_json_success(['message' => 'updated']);
     }
     /**
      * Render the Form Builder page for creating custom forms.
