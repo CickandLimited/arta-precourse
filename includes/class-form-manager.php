@@ -42,6 +42,7 @@ class Ayotte_Form_Manager {
         setInterval(async () => {
             const form = new FormData(document.getElementById('ayottePrecourseForm'));
             form.append('progress','partial');
+            form.append('form_id', 0);
             await fetch(ajaxurl + '?action=ayotte_save_progress', {method:'POST', body: form});
         }, 30000);
         </script>
@@ -115,6 +116,12 @@ class Ayotte_Form_Manager {
                 const data = await res.json();
                 f.querySelector('.ayotteFormMsg').textContent = data.data?.message || '';
             };
+            setInterval(async ()=>{
+                const fd = new FormData(f);
+                fd.append('progress','partial');
+                fd.append('form_id', f.dataset.form);
+                await fetch(ajaxurl + '?action=ayotte_save_progress', {method:'POST', body: fd});
+            }, 30000);
         })();
         </script>
         <?php
@@ -151,6 +158,8 @@ class Ayotte_Form_Manager {
                 }
             }
             update_user_meta($user_id, 'ayotte_form_' . $form_id . '_completed', current_time('mysql'));
+            update_user_meta($user_id, 'ayotte_form_' . $form_id . '_progress', 'complete');
+            Ayotte_Progress_Tracker::update_overall_progress($user_id);
             wp_send_json_success(['message' => 'Saved']);
         }
 
@@ -167,6 +176,9 @@ class Ayotte_Form_Manager {
                 update_user_meta($user_id, 'ayotte_id_file', $uploaded['url']);
             }
         }
+        update_user_meta($user_id, 'ayotte_form_0_completed', current_time('mysql'));
+        update_user_meta($user_id, 'ayotte_form_0_progress', 'complete');
+        Ayotte_Progress_Tracker::update_overall_progress($user_id);
         wp_send_json_success(['message' => 'Saved']);
     }
 }

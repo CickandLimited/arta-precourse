@@ -94,8 +94,10 @@ class Ayotte_Admin_Panel {
             echo '<td><select multiple class="ayotteUserForms" data-user="' . esc_attr($user->ID) . '">';
             foreach ($forms as $f) {
                 $sel = in_array($f->ID, $assigned) ? ' selected' : '';
-                $completed = get_user_meta($user->ID, 'ayotte_form_' . $f->ID . '_completed', true) ? ' (done)' : '';
-                echo '<option value="' . esc_attr($f->ID) . '"' . $sel . '>' . esc_html($f->post_title . $completed) . '</option>';
+                $status = get_user_meta($user->ID, 'ayotte_form_' . $f->ID . '_progress', true);
+                if ($status === 'complete') $status = ' (done)';
+                elseif ($status) $status = ' (' . $status . ')';
+                echo '<option value="' . esc_attr($f->ID) . '"' . $sel . '>' . esc_html($f->post_title . $status) . '</option>';
             }
             echo '</select></td></tr>';
         }
