@@ -2,8 +2,11 @@
 class Ayotte_Precourse {
     public function run() {
         add_action('init', [$this, 'add_rewrite_rules']);
+        add_action('init', [$this, 'register_form_post_type']);
         add_action('template_redirect', [$this, 'handle_token_redirect']);
         add_action('admin_menu', [$this, 'add_menu']);
+        add_action('add_meta_boxes', [$this, 'add_form_meta_boxes']);
+        add_action('save_post_ayotte_form', [$this, 'save_form_meta']);
         add_action('user_register', [$this, 'link_token_to_user'], 10, 1);
         add_action('user_register', [$this, 'auto_login_after_register'], 20, 1);
         add_action('register_form', [$this, 'prefill_registration']);
@@ -142,6 +145,94 @@ class Ayotte_Precourse {
             return site_url('/precourse-forms');
         }
         return $redirect_to;
+    }
+
+    /**
+     * Register the ayotte_form custom post type.
+     */
+    public function register_form_post_type() {
+        $labels = [
+            'name'               => 'Forms',
+            'singular_name'      => 'Form',
+            'add_new_item'       => 'Add New Form',
+            'edit_item'          => 'Edit Form',
+            'new_item'           => 'New Form',
+            'view_item'          => 'View Form',
+            'search_items'       => 'Search Forms',
+            'not_found'          => 'No forms found',
+            'not_found_in_trash' => 'No forms found in Trash',
+        ];
+
+        $caps = [
+            'edit_post'              => 'manage_options',
+            'read_post'              => 'read',
+            'delete_post'            => 'manage_options',
+            'edit_posts'             => 'manage_options',
+            'edit_others_posts'      => 'manage_options',
+            'publish_posts'          => 'manage_options',
+            'read_private_posts'     => 'manage_options',
+            'delete_posts'           => 'manage_options',
+            'delete_private_posts'   => 'manage_options',
+            'delete_published_posts' => 'manage_options',
+            'delete_others_posts'    => 'manage_options',
+            'edit_private_posts'     => 'manage_options',
+            'edit_published_posts'   => 'manage_options',
+            'create_posts'           => 'manage_options',
+        ];
+
+        register_post_type('ayotte_form', [
+            'labels'          => $labels,
+            'public'          => false,
+            'show_ui'         => true,
+            'show_in_menu'    => 'ayotte-precourse',
+            'supports'        => ['title'],
+            'capability_type' => 'ayotte_form',
+            'capabilities'    => $caps,
+            'map_meta_cap'    => true,
+        ]);
+    }
+
+    /**
+     * Add meta boxes for ayotte_form posts.
+     */
+    public function add_form_meta_boxes() {
+        add_meta_box(
+            'ayotte_form_meta',
+            'Form Details',
+            [$this, 'render_form_meta_box'],
+            'ayotte_form'
+        );
+    }
+
+    /**
+     * Render the form details meta box.
+     */
+    public function render_form_meta_box($post) {
+        wp_nonce_field('ayotte_form_meta', 'ayotte_form_meta_nonce');
+        $title  = get_post_meta($post->ID, 'ayotte_form_title', true);
+        $fields = get_post_meta($post->ID, 'ayotte_form_fields', true);
+        echo '<p><label>Form Title:<br>';
+        echo '<input type="text" name="ayotte_form_title" value="' . esc_attr($title) . '" style="width:100%" />';
+        echo '</label></p>';
+        echo '<p><label>Field Definitions (JSON):<br>';
+        echo '<textarea name="ayotte_form_fields" rows="6" style="width:100%">' . esc_textarea($fields) . '</textarea>';
+        echo '</label></p>';
+    }
+
+    /**
+     * Save form metadata when the post is saved.
+     */
+    public function save_form_meta($post_id) {
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+        if (!isset($_POST['ayotte_form_meta_nonce']) || !wp_verify_nonce($_POST['ayotte_form_meta_nonce'], 'ayotte_form_meta')) return;
+        if (!current_user_can('manage_options')) return;
+
+        if (isset($_POST['ayotte_form_fields'])) {
+            update_post_meta($post_id, 'ayotte_form_fields', wp_unslash($_POST['ayotte_form_fields']));
+        }
+        if (isset($_POST['ayotte_form_title'])) {
+            update_post_meta($post_id, 'ayotte_form_title', sanitize_text_field($_POST['ayotte_form_title']));
+        }
     }
 }
 ?>
