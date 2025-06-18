@@ -47,6 +47,26 @@ add_action('plugins_loaded', 'ayotte_precourse_init');
 // Rewrite flush
 register_activation_hook(__FILE__, function() {
     (new Ayotte_Precourse())->add_rewrite_rules();
+    // Create student dashboard page if it doesn't exist
+    if (!get_page_by_path('precourse-forms')) {
+        wp_insert_post([
+            'post_title'   => 'Precourse Forms',
+            'post_name'    => 'precourse-forms',
+            'post_content' => '[ayotte_form_dashboard]',
+            'post_status'  => 'publish',
+            'post_type'    => 'page',
+        ]);
+    }
+    // Create precourse form page
+    if (!get_page_by_path('precourse-form')) {
+        wp_insert_post([
+            'post_title'   => 'Precourse Form',
+            'post_name'    => 'precourse-form',
+            'post_content' => '[ayotte_precourse_form]',
+            'post_status'  => 'publish',
+            'post_type'    => 'page',
+        ]);
+    }
     flush_rewrite_rules();
 });
 register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
