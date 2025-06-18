@@ -94,4 +94,4 @@ function ayotte_send_progress_reminders() {
         }
     }
 }
-?>
+
