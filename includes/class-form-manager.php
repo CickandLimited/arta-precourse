@@ -3,6 +3,7 @@ class Ayotte_Form_Manager {
 
     public function init() {
         add_shortcode('ayotte_precourse_form', [$this, 'render_form']);
+        add_shortcode('ayotte_form_dashboard', [$this, 'render_dashboard']);
         add_action('wp_ajax_ayotte_save_precourse_form', [$this, 'save_form']);
         add_action('wp_ajax_nopriv_ayotte_save_precourse_form', [$this, 'save_form']);
     }
@@ -40,6 +41,18 @@ class Ayotte_Form_Manager {
         }, 30000);
         </script>
         <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Display a list of forms available to the current user.
+     */
+    public function render_dashboard() {
+        if (!is_user_logged_in()) return '<p>Please log in first.</p>';
+        ob_start();
+        echo '<h2>Your Assigned Forms</h2><ul>';
+        echo '<li><a href="' . esc_url( site_url('/precourse-form') ) . '">Precourse Form</a></li>';
+        echo '</ul>';
         return ob_get_clean();
     }
 
