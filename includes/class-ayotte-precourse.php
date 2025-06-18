@@ -8,6 +8,8 @@ class Ayotte_Precourse {
         add_action('user_register', [$this, 'auto_login_after_register'], 20, 1);
         add_action('register_form', [$this, 'prefill_registration']);
         add_filter('registration_redirect', [$this, 'registration_redirect']);
+        add_filter('wp_nav_menu_items', [$this, 'add_student_portal_menu'], 10, 2);
+        add_filter('login_redirect', [$this, 'customer_login_redirect'], 10, 3);
     }
 
     public function add_menu() {
@@ -113,6 +115,30 @@ class Ayotte_Precourse {
     public function registration_redirect($redirect_to) {
         if (!session_id()) session_start();
         if (isset($_SESSION['ayotte_precourse_token'])) {
+            return site_url('/precourse-forms');
+        }
+        return $redirect_to;
+    }
+
+    /**
+     * Append a "Student Portal" menu item for logged-in customers.
+     */
+    public function add_student_portal_menu($items, $args) {
+        if (is_user_logged_in()) {
+            $user = wp_get_current_user();
+            if (in_array('customer', (array) $user->roles, true)) {
+                $url   = esc_url(site_url('/precourse-forms'));
+                $items .= '<li class="menu-item menu-item-student-portal"><a href="' . $url . '">Student Portal</a></li>';
+            }
+        }
+        return $items;
+    }
+
+    /**
+     * Redirect customers to the student portal after login.
+     */
+    public function customer_login_redirect($redirect_to, $requested, $user) {
+        if ($user instanceof WP_User && in_array('customer', (array) $user->roles, true)) {
             return site_url('/precourse-forms');
         }
         return $redirect_to;
