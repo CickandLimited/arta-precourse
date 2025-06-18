@@ -52,6 +52,15 @@ class Ayotte_Precourse {
             'precourse-form-sets',
             [new Ayotte_Admin_Panel(), 'render_form_sets_page']
         );
+
+        add_submenu_page(
+            'ayotte-precourse',
+            'Form Builder',
+            'Form Builder',
+            'manage_options',
+            'precourse-form-builder',
+            [new Ayotte_Admin_Panel(), 'render_form_builder']
+        );
     }
 
     public function render_main_panel() {
@@ -210,10 +219,15 @@ class Ayotte_Precourse {
     public function render_form_meta_box($post) {
         wp_nonce_field('ayotte_form_meta', 'ayotte_form_meta_nonce');
         $title  = get_post_meta($post->ID, 'ayotte_form_title', true);
+        $form_set = get_post_meta($post->ID, 'ayotte_form_set', true);
         $fields = get_post_meta($post->ID, 'ayotte_form_fields', true);
         echo '<p><label>Form Title:<br>';
         echo '<input type="text" name="ayotte_form_title" value="' . esc_attr($title) . '" style="width:100%" />';
         echo '</label></p>';
+        $sets = get_option('ayotte_form_sets', []);
+        echo '<p><label>Form Set:<br><select name="ayotte_form_set"><option value="">None</option>';
+        foreach($sets as $set) echo '<option value="' . esc_attr($set) . '"' . selected($form_set, $set, false) . '>' . esc_html($set) . '</option>';
+        echo '</select></label></p>';
         echo '<p><label>Field Definitions (JSON):<br>';
         echo '<textarea name="ayotte_form_fields" rows="6" style="width:100%">' . esc_textarea($fields) . '</textarea>';
         echo '</label></p>';
@@ -232,6 +246,9 @@ class Ayotte_Precourse {
         }
         if (isset($_POST['ayotte_form_title'])) {
             update_post_meta($post_id, 'ayotte_form_title', sanitize_text_field($_POST['ayotte_form_title']));
+        }
+        if (isset($_POST['ayotte_form_set'])) {
+            update_post_meta($post_id, 'ayotte_form_set', sanitize_text_field($_POST['ayotte_form_set']));
         }
     }
 }

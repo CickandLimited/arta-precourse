@@ -152,6 +152,82 @@ class Ayotte_Admin_Panel {
         }
         wp_send_json_success(['message' => "Sent $count invitations"]);
     }
+    /**
+     * Render the Form Builder page for creating custom forms.
+     */
+    public function render_form_builder() {
+        if (!current_user_can('manage_options')) wp_die('Forbidden');
+
+        $edit_id = isset($_GET['edit']) ? intval($_GET['edit']) : 0;
+
+        if (isset($_POST['ayotte_form_builder_nonce']) && wp_verify_nonce($_POST['ayotte_form_builder_nonce'], 'ayotte_form_builder')) {
+            $form_id = intval($_POST['form_id'] ?? 0);
+            $title   = sanitize_text_field($_POST['form_title'] ?? '');
+            $fields  = wp_unslash($_POST['form_fields'] ?? '[]');
+            $set     = sanitize_text_field($_POST['form_set'] ?? '');
+
+            $post_data = [
+                'post_type'   => 'ayotte_form',
+                'post_title'  => $title,
+                'post_status' => 'publish',
+            ];
+
+            if ($form_id) {
+                $post_data['ID'] = $form_id;
+                wp_update_post($post_data);
+            } else {
+                $form_id = wp_insert_post($post_data);
+            }
+
+            update_post_meta($form_id, 'ayotte_form_title', $title);
+            update_post_meta($form_id, 'ayotte_form_fields', $fields);
+            update_post_meta($form_id, 'ayotte_form_set', $set);
+            $edit_id = $form_id;
+
+            echo '<div class="updated"><p>Form saved.</p></div>';
+        }
+
+        $sets  = get_option('ayotte_form_sets', []);
+        $forms = get_posts(['post_type' => 'ayotte_form', 'numberposts' => -1]);
+
+        $title     = '';
+        $fields_js = '[]';
+        $form_set  = '';
+        if ($edit_id) {
+            $p = get_post($edit_id);
+            if ($p) {
+                $title     = $p->post_title;
+                $fields_js = get_post_meta($edit_id, 'ayotte_form_fields', true) ?: '[]';
+                $form_set  = get_post_meta($edit_id, 'ayotte_form_set', true);
+            }
+        }
+
+        echo '<div class="wrap"><h1>Form Builder</h1>';
+        echo '<form method="post" id="ayotteFormBuilder">';
+        wp_nonce_field('ayotte_form_builder', 'ayotte_form_builder_nonce');
+        echo '<input type="hidden" name="form_id" value="' . esc_attr($edit_id) . '" />';
+        echo '<p><label>Form Title:<br><input type="text" name="form_title" value="' . esc_attr($title) . '" style="width:300px" /></label></p>';
+        echo '<p><label>Form Set:<br><select name="form_set"><option value="">None</option>';
+        foreach ($sets as $set) {
+            echo '<option value="' . esc_attr($set) . '"' . selected($form_set, $set, false) . '>' . esc_html($set) . '</option>';
+        }
+        echo '</select></label></p>';
+        echo '<div id="fieldsContainer"></div>';
+        echo '<button type="button" id="addField" class="button">Add Field</button>';
+        echo '<input type="hidden" name="form_fields" id="formFieldsInput" />';
+        echo '<p><input type="submit" class="button button-primary" value="Save Form" /></p>';
+        echo '</form>';
+
+        echo '<h2>Existing Forms</h2><ul>';
+        foreach ($forms as $f) {
+            $url = add_query_arg('edit', $f->ID, menu_page_url('precourse-form-builder', false));
+            echo '<li><a href="' . esc_url($url) . '">' . esc_html($f->post_title) . '</a></li>';
+        }
+        echo '</ul></div>';
+
+        echo '<script>var fields = ' . $fields_js . ';\n' .
+             'function renderFields(){const c=document.getElementById("fieldsContainer");c.innerHTML="";fields.forEach((f,i)=>{const d=document.createElement("div");d.innerHTML=`<input type="text" class="field-label" placeholder="Label" value="${f.label||""}"> <select class="field-type"><option value="text"${f.type==="text"?" selected":""}>Text</option><option value="textarea"${f.type==="textarea"?" selected":""}>Textarea</option><option value="file"${f.type==="file"?" selected":""}>File</option></select> <button type="button" class="removeField">Remove</button>`;d.querySelector(".removeField").onclick=()=>{fields.splice(i,1);renderFields();};c.appendChild(d);});document.getElementById("formFieldsInput").value=JSON.stringify(fields);}document.getElementById("addField").onclick=()=>{fields.push({label:"",type:"text"});renderFields();};renderFields();</script>';
+    }
 
 }
 ?>
