@@ -95,6 +95,13 @@ class Ayotte_Form_Manager {
      */
     public function render_dashboard() {
         if (!is_user_logged_in()) return '<p>Please log in first.</p>';
+
+        // If a form ID is provided, display that form on the same page.
+        $form_id = intval($_GET['form_id'] ?? 0);
+        if ($form_id) {
+            return $this->render_form(['id' => $form_id]);
+        }
+
         $user_id  = get_current_user_id();
         $tracker  = new Ayotte_Progress_Tracker();
         $tracker->sync_user_forms($user_id);
@@ -132,7 +139,7 @@ class Ayotte_Form_Manager {
                 $submitted    = ($status === 'complete');
                 $status_label = $submitted ? 'Submitted' : 'Pending';
 
-                $url    = esc_url(add_query_arg('form_id', $form_id, site_url('/precourse-form')));
+                $url    = esc_url(add_query_arg('form_id', $form_id, site_url('/precourse-forms')));
                 $action = '<a class="button" href="' . $url . '">' . ($submitted ? 'View' : 'Fill') . '</a>';
 
                 echo '<tr>';

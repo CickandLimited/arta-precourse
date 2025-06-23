@@ -28,7 +28,7 @@ class Ayotte_Submission_Redirect {
      * Output JS that redirects after successful AJAX form submission.
      */
     public function add_redirect_script() {
-        if (is_page('precourse-forms')) {
+        if (!is_page('precourse-forms') || empty($_GET['form_id'])) {
             return;
         }
         if (!is_user_logged_in()) {
