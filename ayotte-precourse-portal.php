@@ -33,9 +33,35 @@ if (!function_exists('ayotte_log_message')) {
     }
 }
 
+function ayotte_wpforms_missing_notice() {
+    $url = admin_url('plugin-install.php?tab=plugin-information&plugin=wpforms-lite');
+    echo '<div class="notice notice-warning"><p>';
+    echo 'WPForms Lite is required for the Precourse Portal. ';
+    echo '<a href="' . esc_url($url) . '">Install it here.</a>';
+    echo '</p></div>';
+}
+
+function ayotte_add_wpforms_submenu() {
+    add_submenu_page(
+        'ayotte-precourse',
+        'Build Forms',
+        'Build Forms',
+        'manage_options',
+        'admin.php?page=wpforms-builder'
+    );
+}
+
 // Plugin Initialization with verbose logging restored
 function ayotte_precourse_init() {
     ayotte_log_message('INFO', 'Ayotte Precourse Portal plugin initializing...');
+
+    $has_wpforms = class_exists('WPForms');
+    if ( ! $has_wpforms ) {
+        add_action( 'admin_notices', 'ayotte_wpforms_missing_notice' );
+    } else {
+        add_action( 'admin_menu', 'ayotte_add_wpforms_submenu', 20 );
+    }
+
     $plugin = new Ayotte_Precourse();
     $plugin->run();
     (new Ayotte_Admin_Panel())->init();
