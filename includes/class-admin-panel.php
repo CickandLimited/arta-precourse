@@ -116,32 +116,17 @@ class Ayotte_Admin_Panel {
      * Simple page for managing optional form sets
      */
     public function render_form_sets_page() {
-        if (isset($_POST['new_set']) && check_admin_referer('ayotte_form_sets')) {
-            $sets = get_option('ayotte_form_sets', []);
-            $sets[] = sanitize_text_field($_POST['new_set']);
-            update_option('ayotte_form_sets', $sets);
-        }
-
-        if (!empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'ayotte_form_sets') && !isset($_POST['new_set'])) {
+        if (!empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'ayotte_form_sets')) {
             $selected = array_map('intval', (array) ($_POST['ayotte_available_forms'] ?? []));
             update_option('ayotte_available_forms', $selected);
         }
 
-        $sets     = get_option('ayotte_form_sets', []);
         $selected = get_option('ayotte_available_forms', []);
         $forms    = class_exists('Forminator_API') ? Forminator_API::get_forms() : [];
 
         echo '<div class="wrap">';
         echo '<h1>Form Sets</h1>';
 
-        // Add new set form
-        echo '<form method="post">';
-        wp_nonce_field('ayotte_form_sets');
-        echo '<p><input type="text" name="new_set" placeholder="Form set name" /> ';
-        echo '<button type="submit" class="button">Add</button></p>';
-        echo '</form>';
-
-        echo '<h2>Available Forms</h2>';
         echo '<form method="post">';
         wp_nonce_field('ayotte_form_sets');
 
@@ -151,11 +136,7 @@ class Ayotte_Admin_Panel {
         }
 
         echo '<p><button type="submit" class="button button-primary">Save Forms</button></p>';
-        echo '</form>';
-
-        echo '<h2>Form Sets</h2><ul>';
-        foreach ($sets as $set) echo '<li>' . esc_html($set) . '</li>';
-        echo '</ul></div>';
+        echo '</form></div>';
     }
 
     public function init() {
