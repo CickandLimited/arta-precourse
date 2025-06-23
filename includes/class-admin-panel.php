@@ -120,7 +120,13 @@ class Ayotte_Admin_Panel {
             echo '<td>';
             foreach ($assigned as $id) {
                 $name = $form_options[$id] ?? 'Form ' . $id;
-                echo '<label style="margin-right:10px;"><input type="checkbox" name="ayotte_unlock_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '"> ' . esc_html($name) . '</label>';
+                $view  = '';
+                $entry = get_user_meta($user->ID, "ayotte_form_{$id}_entry", true);
+                if ($entry) {
+                    $url  = admin_url('admin.php?page=precourse-view-submission&form_id=' . intval($id) . '&user_id=' . intval($user->ID));
+                    $view = ' <a href="' . esc_url($url) . '">View</a>';
+                }
+                echo '<label style="margin-right:10px;"><input type="checkbox" name="ayotte_unlock_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '"> ' . esc_html($name) . $view . '</label>';
             }
             echo '</td>';
 

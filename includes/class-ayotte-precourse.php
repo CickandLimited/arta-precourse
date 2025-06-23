@@ -49,6 +49,16 @@ class Ayotte_Precourse {
             'precourse-form-sets',
             [new Ayotte_Admin_Panel(), 'render_form_sets_page']
         );
+
+        // Hidden page for viewing individual submissions
+        add_submenu_page(
+            null,
+            'View Submission',
+            'View Submission',
+            'manage_options',
+            'precourse-view-submission',
+            [new Ayotte_Form_Manager(), 'render_admin_submission_page']
+        );
     }
 
     public function render_main_panel() {
