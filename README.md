@@ -6,7 +6,7 @@ Ayotte Precourse Portal is a WordPress plugin that manages an invitation based w
 
 1. Install and activate the **Forminator** plugin.
 2. Copy this plugin's folder into `wp-content/plugins/` on your WordPress site and activate **Ayotte Precourse Portal**.
-3. Activation automatically creates the pages `Precourse Forms` (dashboard) and `Precourse Form` (form display).
+3. Activation automatically creates the `Precourse Forms` page, which serves as both the dashboard and form display.
 4. A new **Precourse Portal** menu will appear in the WordPress admin with tools for invites, debugging, progress tracking and form management.
 
 ## Basic Usage
