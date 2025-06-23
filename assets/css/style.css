@@ -1,0 +1,41 @@
+.ayotte-dashboard {
+    margin-bottom: 2em;
+}
+
+.ayotte-progress-bar {
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+    height: 20px;
+    margin-bottom: 10px;
+}
+
+.ayotte-progress-fill {
+    background: #0073aa;
+    color: #fff;
+    height: 100%;
+    text-align: center;
+    line-height: 20px;
+    white-space: nowrap;
+}
+
+.ayotte-progress-summary {
+    margin-bottom: 1em;
+}
+
+.ayotte-dashboard-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1em;
+}
+
+.ayotte-dashboard-table th,
+.ayotte-dashboard-table td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.ayotte-dashboard-table th {
+    background: #f9f9f9;
+    text-align: left;
+}

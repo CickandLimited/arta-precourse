@@ -104,13 +104,15 @@ class Ayotte_Form_Manager {
         $progress = $progress ?: '0%';
 
         ob_start();
+        echo '<div class="ayotte-dashboard">';
         echo '<h2>Your Assigned Forms</h2>';
+        echo '<div class="ayotte-progress-bar"><div class="ayotte-progress-fill" style="width:' . esc_attr($progress) . ';">' . esc_html($progress) . '</div></div>';
         echo '<p class="ayotte-progress-summary">Progress: ' . esc_html($progress) . '</p>';
 
         if (!$assigned) {
             echo '<p>No forms assigned.</p>';
         } else {
-            echo '<table class="widefat"><thead><tr><th>Form</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+            echo '<table class="widefat ayotte-dashboard-table"><thead><tr><th>Form</th><th>Status</th><th>Action</th></tr></thead><tbody>';
             foreach ($assigned as $form_id) {
                 $form_id = intval($form_id);
                 if (!$form_id) {
@@ -142,6 +144,7 @@ class Ayotte_Form_Manager {
             echo '</tbody></table>';
         }
 
+        echo '</div>';
         return ob_get_clean();
     }
 
