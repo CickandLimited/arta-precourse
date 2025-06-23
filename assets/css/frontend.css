@@ -1,13 +1,62 @@
-.ayotte-dashboard table.widefat{
-    width:100%;
-    margin-top:20px;
+# The frontend dashboard adopts a minimalistic design using the
+# brand colour #a32c2e along with light greys and white. Elements are
+# center aligned and neatly spaced.
+
+.ayotte-dashboard {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-.ayotte-dashboard .ayotte-progress-summary{
-    font-weight:bold;
-    margin-bottom:10px;
+
+.ayotte-dashboard h2 {
+    margin-top: 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #a32c2e;
+    color: #a32c2e;
 }
-.ayotte-dashboard .button{
-    text-decoration:none;
+
+.ayotte-dashboard .ayotte-progress-summary {
+    font-weight: bold;
+    margin: 10px 0 20px;
+    color: #a32c2e;
+}
+
+.ayotte-dashboard table.widefat {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ayotte-dashboard table.widefat th {
+    background: #a32c2e;
+    color: #fff;
+    text-align: left;
+    padding: 8px 10px;
+}
+
+.ayotte-dashboard table.widefat td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.ayotte-dashboard table.widefat tr:nth-child(even) {
+    background: #f7f7f7;
+}
+
+.ayotte-dashboard .button {
+    background: #a32c2e;
+    color: #fff;
+    text-decoration: none;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.ayotte-dashboard .button:hover {
+    opacity: 0.9;
 }
 #ayottePrecourseForm p{
     margin-bottom:15px;
