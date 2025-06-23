@@ -70,13 +70,43 @@ class Ayotte_Admin_Panel {
      * Display a simple progress dashboard
      */
     public function render_tracking_dashboard() {
+        if (isset($_POST['ayotte_assigned_forms']) && check_admin_referer('ayotte_assign_forms')) {
+            foreach ((array) $_POST['ayotte_assigned_forms'] as $user_id => $forms) {
+                $forms = array_map('intval', (array) $forms);
+                update_user_meta((int) $user_id, 'ayotte_assigned_forms', $forms);
+            }
+        }
+
+        $available_ids = get_option('ayotte_available_forms', []);
+        $all_forms     = class_exists('Forminator_API') ? Forminator_API::get_forms() : [];
+        $form_options  = [];
+        foreach ($all_forms as $form) {
+            if (in_array($form->id, $available_ids, true)) {
+                $form_options[$form->id] = $form->name;
+            }
+        }
+
         $users = get_users(['meta_key' => 'ayotte_precourse_token']);
-        echo '<div class="wrap"><h1>Student Progress</h1><table class="widefat"><thead><tr><th>Email</th><th>Progress</th></tr></thead><tbody>';
+        echo '<div class="wrap"><h1>Student Progress</h1><form method="post">';
+        wp_nonce_field('ayotte_assign_forms');
+        echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Forms</th></tr></thead><tbody>';
         foreach ($users as $user) {
             $progress = get_user_meta($user->ID, 'ayotte_progress', true);
-            echo '<tr><td>' . esc_html($user->user_email) . '</td><td>' . esc_html($progress ?: '0%') . '</td></tr>';
+            $assigned = (array) get_user_meta($user->ID, 'ayotte_assigned_forms', true);
+            echo '<tr>';
+            echo '<td>' . esc_html($user->user_email) . '</td>';
+            echo '<td>' . esc_html($progress ?: '0%') . '</td>';
+            echo '<td>';
+            foreach ($form_options as $id => $name) {
+                $checked = in_array($id, $assigned, true) ? 'checked' : '';
+                echo '<label style="margin-right:10px;"><input type="checkbox" name="ayotte_assigned_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '" ' . $checked . '> ' . esc_html($name) . '</label>';
+            }
+            echo '</td>';
+            echo '</tr>';
         }
-        echo '</tbody></table></div>';
+        echo '</tbody></table>';
+        echo '<p><button type="submit" class="button button-primary">Save Assignments</button></p>';
+        echo '</form></div>';
     }
 
     /**
@@ -89,8 +119,8 @@ class Ayotte_Admin_Panel {
             update_option('ayotte_form_sets', $sets);
         }
 
-        if (isset($_POST['ayotte_available_forms']) && check_admin_referer('ayotte_form_sets')) {
-            $selected = array_map('intval', (array) $_POST['ayotte_available_forms']);
+        if (!empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'ayotte_form_sets') && !isset($_POST['new_set'])) {
+            $selected = array_map('intval', (array) ($_POST['ayotte_available_forms'] ?? []));
             update_option('ayotte_available_forms', $selected);
         }
 
