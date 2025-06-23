@@ -87,10 +87,7 @@ class Ayotte_Admin_Panel {
         }
 
 
-       $users = get_users([
-    'role' => 'customer',
-    'meta_key' => 'ayotte_precourse_token',
-                          ]);
+     $users = get_users(['role' => 'customer']);
 
         echo '<div class="wrap"><h1>Student Progress</h1><form method="post">';
         wp_nonce_field('ayotte_assign_forms');
