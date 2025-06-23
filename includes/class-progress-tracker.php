@@ -111,6 +111,7 @@ class Ayotte_Progress_Tracker {
                 continue;
             }
 
+
             $entries = [];
             try {
                 $entries = Forminator_API::get_entries($form_id, ['paged' => 1, 'per_page' => 50]);
@@ -142,6 +143,7 @@ class Ayotte_Progress_Tracker {
                         break;
                     }
                 }
+
             }
         }
 
