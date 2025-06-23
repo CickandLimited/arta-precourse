@@ -20,6 +20,18 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-progress-tracker.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-submission-redirect.php';
 
 /**
+ * Normalize Forminator output to avoid PHP 8.1 deprecations when null is passed
+ * to string functions within WordPress core.
+ *
+ * @param mixed $html Existing markup from Forminator.
+ * @return string Normalized HTML.
+ */
+function ayotte_normalize_forminator_html($html) {
+    return is_string($html) ? $html : '';
+}
+add_filter('forminator_render_form', 'ayotte_normalize_forminator_html', 1);
+
+/**
  * Enqueue front end assets.
  */
 function ayotte_precourse_enqueue_assets() {
