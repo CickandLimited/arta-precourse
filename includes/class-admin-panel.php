@@ -85,29 +85,37 @@ class Ayotte_Admin_Panel {
                 $form_options[$form->id] = $form->name;
             }
         }
+// Query only users that have the precourse token meta key
+$users = get_users(['meta_key' => 'ayotte_precourse_token']);
 
-        $users = get_users(['role' => 'customer']);
-        echo '<div class="wrap"><h1>Student Progress</h1><form method="post">';
-        wp_nonce_field('ayotte_assign_forms');
-        echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Forms</th></tr></thead><tbody>';
-        foreach ($users as $user) {
-            $progress = get_user_meta($user->ID, 'ayotte_progress', true);
-            $assigned = (array) get_user_meta($user->ID, 'ayotte_assigned_forms', true);
-            echo '<tr>';
-            echo '<td>' . esc_html($user->user_email) . '</td>';
-            echo '<td>' . esc_html($progress ?: '0%') . '</td>';
-            echo '<td><select name="ayotte_assigned_forms[' . intval($user->ID) . '][]" multiple>';            
-            foreach ($form_options as $id => $name) {
-                $selected = in_array($id, $assigned, true) ? 'selected' : '';
-                echo '<option value="' . esc_attr($id) . '" ' . $selected . '>' . esc_html($name) . '</option>';
-            }
-            echo '</select></td>';
-            echo '</tr>';
-        }
-        echo '</tbody></table>';
-        echo '<p><button type="submit" class="button button-primary">Save Assignments</button></p>';
-        echo '</form></div>';
+echo '<div class="wrap"><h1>Student Progress</h1><form method="post">';
+wp_nonce_field('ayotte_assign_forms');
+echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Forms</th></tr></thead><tbody>';
+
+foreach ($users as $user) {
+    $progress = get_user_meta($user->ID, 'ayotte_progress', true);
+    $assigned = (array) get_user_meta($user->ID, 'ayotte_assigned_forms', true);
+
+    echo '<tr>';
+    echo '<td>' . esc_html($user->user_email) . '</td>';
+    echo '<td>' . esc_html($progress ?: '0%') . '</td>';
+
+    // Render form assignments as a checkbox list
+    echo '<td>';
+    foreach ($form_options as $id => $name) {
+        $checked = in_array($id, $assigned, true) ? 'checked' : '';
+        echo '<label style="margin-right:10px;">';
+        echo '<input type="checkbox" name="ayotte_assigned_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '" ' . $checked . '> ';
+        echo esc_html($name) . '</label>';
     }
+    echo '</td>';
+
+    echo '</tr>';
+}
+
+echo '</tbody></table>';
+echo '<p><button type="submit" class="button button-primary">Save Assignments</button></p>';
+echo '</form></div>';
 
     /**
      * Simple page for managing optional form sets
@@ -119,8 +127,8 @@ class Ayotte_Admin_Panel {
             update_option('ayotte_form_sets', $sets);
         }
 
-        if (isset($_POST['ayotte_available_forms']) && check_admin_referer('ayotte_form_sets')) {
-            $selected = array_map('intval', (array) $_POST['ayotte_available_forms']);
+        if (!empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'ayotte_form_sets') && !isset($_POST['new_set'])) {
+            $selected = array_map('intval', (array) ($_POST['ayotte_available_forms'] ?? []));
             update_option('ayotte_available_forms', $selected);
         }
 
