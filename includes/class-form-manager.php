@@ -1,11 +1,29 @@
 <?php
 class Ayotte_Form_Manager {
 
+    /**
+     * Track when a Forminator form is being rendered by this plugin
+     * so the hidden email field can be injected only once per form.
+     *
+     * @var bool
+     */
+    private $inject_email = false;
+
+    /**
+     * Ensure we don't add the field multiple times on a single form.
+     *
+     * @var bool
+     */
+    private $email_added = false;
+
     public function init() {
         add_shortcode('ayotte_precourse_form', [$this, 'render_form']);
         add_shortcode('ayotte_form_dashboard', [$this, 'render_dashboard']);
         add_action('wp_ajax_ayotte_save_precourse_form', [$this, 'save_form']);
         add_action('wp_ajax_nopriv_ayotte_save_precourse_form', [$this, 'save_form']);
+
+        // Inject logged-in user email as hidden field when rendering Forminator forms
+        add_filter('forminator_render_form', [$this, 'add_email_field'], 10, 2);
     }
 
     /**
@@ -31,7 +49,12 @@ class Ayotte_Form_Manager {
                 return $this->render_readonly_submission($form_id, $user_id);
             }
 
-            return do_shortcode('[forminator_form id="' . $form_id . '"]');
+            $this->inject_email = true;
+            $this->email_added  = false;
+            $html = do_shortcode('[forminator_form id="' . $form_id . '"]');
+            $this->inject_email = false;
+
+            return $html;
         }
 
         // Legacy precourse form
@@ -165,6 +188,43 @@ class Ayotte_Form_Manager {
             $html .= '<tr><th>' . esc_html($label) . '</th><td>' . esc_html($value) . '</td></tr>';
         }
         $html .= '</table></div>';
+
+        return $html;
+    }
+
+    /**
+     * Inject a hidden Email field into Forminator forms rendered by this plugin.
+     *
+     * Hooked to the `forminator_render_form` filter.
+     *
+     * @param string $html    Existing form HTML.
+     * @param int    $form_id ID of the form being rendered.
+     * @return string Modified form HTML.
+     */
+    public function add_email_field($html, $form_id) {
+        if (!$this->inject_email || !is_user_logged_in()) {
+            return $html;
+        }
+
+        if ($this->email_added) {
+            return $html;
+        }
+
+        if (strpos($html, 'name="Email"') !== false) {
+            $this->email_added = true;
+            return $html;
+        }
+
+        $email  = esc_attr(wp_get_current_user()->user_email);
+        $hidden = '<input type="hidden" name="Email" value="' . $email . '" />';
+
+        if (false !== strpos($html, '</form>')) {
+            $html = str_replace('</form>', $hidden . '</form>', $html);
+        } else {
+            $html .= $hidden;
+        }
+
+        $this->email_added = true;
 
         return $html;
     }
