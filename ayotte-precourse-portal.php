@@ -9,6 +9,7 @@ Author: Kris Rabai
 defined('ABSPATH') || exit;
 
 define('AYOTTE_PRECOURSE_VERSION', '1.0');
+define('AYOTTE_PRECOURSE_CAPABILITY', 'manage_precourse');
 
 // Includes
 require_once plugin_dir_path(__FILE__) . 'includes/class-ayotte-precourse.php';
@@ -36,6 +37,10 @@ if (!function_exists('ayotte_log_message')) {
 // Plugin Initialization with verbose logging restored
 function ayotte_precourse_init() {
     ayotte_log_message('INFO', 'Ayotte Precourse Portal plugin initializing...');
+    $admin = get_role('administrator');
+    if ($admin && !$admin->has_cap(AYOTTE_PRECOURSE_CAPABILITY)) {
+        $admin->add_cap(AYOTTE_PRECOURSE_CAPABILITY);
+    }
     $plugin = new Ayotte_Precourse();
     $plugin->run();
     (new Ayotte_Admin_Panel())->init();
@@ -49,6 +54,10 @@ register_activation_hook(__FILE__, function() {
     $precourse = new Ayotte_Precourse();
     $precourse->add_rewrite_rules();
     $precourse->register_form_post_type();
+    $admin = get_role('administrator');
+    if ($admin && !$admin->has_cap(AYOTTE_PRECOURSE_CAPABILITY)) {
+        $admin->add_cap(AYOTTE_PRECOURSE_CAPABILITY);
+    }
     // Create student dashboard page if it doesn't exist
     if (!get_page_by_path('precourse-forms')) {
         wp_insert_post([
@@ -89,4 +98,4 @@ function ayotte_send_progress_reminders() {
         }
     }
 }
-?>
+
