@@ -83,9 +83,8 @@ class Ayotte_Admin_Panel {
                     delete_user_meta($user_id, "ayotte_form_{$form_id}_status");
                 }
 
-                if (!empty($unlock)) {
-                    $tracker->recalculate_progress($user_id);
-                }
+                // Always recalculate progress after updating assignments
+                $tracker->recalculate_progress($user_id);
             }
         }
 
