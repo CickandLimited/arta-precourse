@@ -57,7 +57,7 @@ function ayotte_add_forminator_submenu() {
         'manage_options',
         'ayotte-forminator',
         function () {
-            wp_redirect(admin_url('admin.php?page=forminator-forms'));
+            wp_redirect(admin_url('admin.php?page=forminator-cform'));
             exit;
         }
     );
