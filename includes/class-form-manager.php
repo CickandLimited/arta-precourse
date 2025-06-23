@@ -11,11 +11,33 @@ class Ayotte_Form_Manager {
     /**
      * Render simple precourse form with personal info and ID upload.
      */
-    public function render_form() {
+    public function render_form($atts = []) {
         if (!is_user_logged_in()) return '<p>Please log in first.</p>';
+
         $user_id = get_current_user_id();
-        $phone   = esc_attr(get_user_meta($user_id, 'ayotte_phone', true));
-        $reason  = esc_textarea(get_user_meta($user_id, 'ayotte_reason', true));
+        $form_id = intval($atts['id'] ?? ($_GET['form_id'] ?? 0));
+
+        // If a Forminator form ID is provided, display that form
+        if ($form_id) {
+            $assigned = (array) get_user_meta($user_id, 'ayotte_assigned_forms', true);
+            if (!in_array($form_id, $assigned, true)) {
+                return '<p>Form not assigned to you.</p>';
+            }
+
+            $status   = get_user_meta($user_id, "ayotte_form_{$form_id}_status", true);
+            $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
+
+            if ($status === 'complete' && !$unlocked) {
+                return $this->render_readonly_submission($form_id, $user_id);
+            }
+
+            return do_shortcode('[forminator_form id="' . $form_id . '"]');
+        }
+
+        // Legacy precourse form
+        $phone  = esc_attr(get_user_meta($user_id, 'ayotte_phone', true));
+        $reason = esc_textarea(get_user_meta($user_id, 'ayotte_reason', true));
+
         ob_start();
         ?>
         <form id="ayottePrecourseForm" enctype="multipart/form-data">
@@ -59,24 +81,45 @@ class Ayotte_Form_Manager {
         echo '<h2>Your Assigned Forms</h2>';
         echo '<p class="ayotte-progress-summary">Progress: ' . esc_html($progress) . '</p>';
 
-        foreach ($assigned as $form_id) {
-            $form_id = intval($form_id);
-            if (!$form_id) {
-                continue;
+        if (!$assigned) {
+            echo '<p>No forms assigned.</p>';
+        } else {
+            echo '<table class="widefat"><thead><tr><th>Form</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+            foreach ($assigned as $form_id) {
+                $form_id = intval($form_id);
+                if (!$form_id) {
+                    continue;
+                }
+
+                $status   = get_user_meta($user_id, "ayotte_form_{$form_id}_status", true);
+                $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
+
+                $name = 'Form ' . $form_id;
+                if (class_exists('Forminator_API')) {
+                    $form = Forminator_API::get_form($form_id);
+                    if ($form && !is_wp_error($form)) {
+                        $name = $form->name;
+                    }
+                }
+
+                $submitted = ($status === 'complete');
+                $locked    = $submitted && !$unlocked;
+                $status_label = $submitted ? 'Submitted' : 'Pending';
+
+                if ($locked) {
+                    $action = '<span class="dashicons dashicons-lock"></span>';
+                } else {
+                    $url    = esc_url(add_query_arg('form_id', $form_id, site_url('/precourse-form')));
+                    $action = '<a class="button" href="' . $url . '">' . ($submitted ? 'View' : 'Fill') . '</a>';
+                }
+
+                echo '<tr>';
+                echo '<td>' . esc_html($name) . '</td>';
+                echo '<td>' . esc_html($status_label) . '</td>';
+                echo '<td>' . $action . '</td>';
+                echo '</tr>';
             }
-
-            $status   = get_user_meta($user_id, "ayotte_form_{$form_id}_status", true);
-            $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
-
-            echo '<div class="ayotte-form-wrapper" style="margin-bottom:30px;">';
-
-            if ($status === 'complete' && !$unlocked) {
-                echo $this->render_readonly_submission($form_id, $user_id);
-            } else {
-                echo do_shortcode('[forminator_form id="' . $form_id . '"]');
-            }
-
-            echo '</div>';
+            echo '</tbody></table>';
         }
 
         return ob_get_clean();
