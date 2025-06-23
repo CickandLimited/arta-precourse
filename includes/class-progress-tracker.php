@@ -87,4 +87,54 @@ class Ayotte_Progress_Tracker {
         update_user_meta($user_id, 'ayotte_progress', $progress);
         update_user_meta($user_id, 'ayotte_progress_updated', current_time('mysql'));
     }
+
+    /**
+     * Synchronize submitted entries for a user and update progress.
+     *
+     * @param int $user_id
+     */
+    public function sync_user_forms($user_id) {
+        if (!class_exists('Forminator_API')) {
+            return;
+        }
+
+        $assigned = (array) get_user_meta($user_id, 'ayotte_assigned_forms', true);
+        if (empty($assigned)) {
+            return;
+        }
+
+        $email = get_userdata($user_id)->user_email ?? '';
+
+        foreach ($assigned as $form_id) {
+            $form_id = intval($form_id);
+            if (!$form_id) {
+                continue;
+            }
+
+            $args = [
+                'paged'    => 1,
+                'per_page' => 1,
+                'search'   => [
+                    'fields' => [
+                        [
+                            'name'  => 'Email',
+                            'value' => $email,
+                        ],
+                    ],
+                ],
+            ];
+
+            $entries = Forminator_API::get_entries($form_id, $args);
+            if ($entries && !empty($entries->entries)) {
+                $entry = $entries->entries[0];
+                $entry_id = $entry->entry_id ?? ($entry->id ?? 0);
+                if ($entry_id) {
+                    update_user_meta($user_id, "ayotte_form_{$form_id}_entry", $entry_id);
+                }
+                update_user_meta($user_id, "ayotte_form_{$form_id}_status", 'complete');
+            }
+        }
+
+        $this->recalculate_progress($user_id);
+    }
 }

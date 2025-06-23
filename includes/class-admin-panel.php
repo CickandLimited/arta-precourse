@@ -70,10 +70,10 @@ class Ayotte_Admin_Panel {
      * Display a simple progress dashboard
      */
     public function render_tracking_dashboard() {
-        $users = get_users(['role' => 'customer']);
+        $users   = get_users(['role' => 'customer']);
+        $tracker = new Ayotte_Progress_Tracker();
 
         if (isset($_POST['ayotte_assigned_forms']) && check_admin_referer('ayotte_assign_forms')) {
-            $tracker = new Ayotte_Progress_Tracker();
             foreach ($users as $user) {
                 $user_id = (int) $user->ID;
                 $forms   = array_map('intval', (array) ($_POST['ayotte_assigned_forms'][$user_id] ?? []));
@@ -104,6 +104,7 @@ class Ayotte_Admin_Panel {
         wp_nonce_field('ayotte_assign_forms');
         echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Forms</th><th>Unlock</th></tr></thead><tbody>';
         foreach ($users as $user) {
+            $tracker->sync_user_forms($user->ID);
             $progress = get_user_meta($user->ID, 'ayotte_progress', true);
             $assigned = (array) get_user_meta($user->ID, 'ayotte_assigned_forms', true);
             echo '<tr>';

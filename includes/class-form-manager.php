@@ -95,6 +95,8 @@ class Ayotte_Form_Manager {
     public function render_dashboard() {
         if (!is_user_logged_in()) return '<p>Please log in first.</p>';
         $user_id  = get_current_user_id();
+        $tracker  = new Ayotte_Progress_Tracker();
+        $tracker->sync_user_forms($user_id);
         $assigned = (array) get_user_meta($user_id, 'ayotte_assigned_forms', true);
 
         $progress = get_user_meta($user_id, 'ayotte_progress', true);
