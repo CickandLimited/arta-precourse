@@ -49,18 +49,81 @@ class Ayotte_Form_Manager {
      */
     public function render_dashboard() {
         if (!is_user_logged_in()) return '<p>Please log in first.</p>';
-        $user_id = get_current_user_id();
+        $user_id  = get_current_user_id();
         $assigned = (array) get_user_meta($user_id, 'ayotte_assigned_forms', true);
+
+        $progress = get_user_meta($user_id, 'ayotte_progress', true);
+        $progress = $progress ?: '0%';
 
         ob_start();
         echo '<h2>Your Assigned Forms</h2>';
+        echo '<p class="ayotte-progress-summary">Progress: ' . esc_html($progress) . '</p>';
+
         foreach ($assigned as $form_id) {
             $form_id = intval($form_id);
-            if ($form_id) {
+            if (!$form_id) {
+                continue;
+            }
+
+            $status   = get_user_meta($user_id, "ayotte_form_{$form_id}_status", true);
+            $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
+
+            echo '<div class="ayotte-form-wrapper" style="margin-bottom:30px;">';
+
+            if ($status === 'complete' && !$unlocked) {
+                echo $this->render_readonly_submission($form_id, $user_id);
+            } else {
                 echo do_shortcode('[forminator_form id="' . $form_id . '"]');
             }
+
+            echo '</div>';
         }
+
         return ob_get_clean();
+    }
+
+    /**
+     * Fetch a user submission and render it in read-only mode.
+     */
+    private function render_readonly_submission($form_id, $user_id) {
+        if (!class_exists('Forminator_API')) {
+            return '<p>Form submitted.</p>';
+        }
+
+        $args     = [
+            'paged'    => 1,
+            'per_page' => 1,
+            'search'   => [
+                'user_id' => $user_id,
+            ],
+        ];
+        $entries  = Forminator_API::get_entries($form_id, $args);
+        $entry    = $entries && !empty($entries->entries[0]) ? $entries->entries[0] : null;
+
+        if (!$entry) {
+            return '<p>Form submitted.</p>';
+        }
+
+        $fields = [];
+        if (isset($entry->meta_data) && is_array($entry->meta_data)) {
+            foreach ($entry->meta_data as $meta) {
+                $label = $meta['name'] ?? ($meta->name ?? '');
+                $value = $meta['value'] ?? ($meta->value ?? '');
+                $fields[$label] = $value;
+            }
+        }
+
+        if (!$fields) {
+            return '<p>Form submitted.</p>';
+        }
+
+        $html = '<div class="ayotte-readonly-form"><table class="widefat">';
+        foreach ($fields as $label => $value) {
+            $html .= '<tr><th>' . esc_html($label) . '</th><td>' . esc_html($value) . '</td></tr>';
+        }
+        $html .= '</table></div>';
+
+        return $html;
     }
 
     /**
