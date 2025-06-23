@@ -195,6 +195,28 @@ class Ayotte_Form_Manager {
     }
 
     /**
+     * Display a submitted form in the admin area.
+     */
+    public function render_admin_submission_page() {
+        if (!current_user_can('manage_options')) {
+            wp_die('Forbidden');
+        }
+
+        $form_id = intval($_GET['form_id'] ?? 0);
+        $user_id = intval($_GET['user_id'] ?? 0);
+
+        echo '<div class="wrap"><h1>Form Submission</h1>';
+
+        if (!$form_id || !$user_id) {
+            echo '<p>Invalid form or user.</p></div>';
+            return;
+        }
+
+        echo $this->render_readonly_submission($form_id, $user_id);
+        echo '</div>';
+    }
+
+    /**
      * Inject a hidden Email field into Forminator forms rendered by this plugin.
      *
      * Hooked to the `forminator_render_form` filter.
