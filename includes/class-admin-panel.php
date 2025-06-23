@@ -86,7 +86,9 @@ class Ayotte_Admin_Panel {
             }
         }
 
-        $users = get_users(['role' => 'customer']);
+        $users = get_users(['meta_key' => 'ayotte_precourse_token']);
+
+ main
         echo '<div class="wrap"><h1>Student Progress</h1><form method="post">';
         wp_nonce_field('ayotte_assign_forms');
         echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Forms</th></tr></thead><tbody>';
@@ -96,12 +98,14 @@ class Ayotte_Admin_Panel {
             echo '<tr>';
             echo '<td>' . esc_html($user->user_email) . '</td>';
             echo '<td>' . esc_html($progress ?: '0%') . '</td>';
-            echo '<td><select name="ayotte_assigned_forms[' . intval($user->ID) . '][]" multiple>';            
+
+            echo '<td>';
             foreach ($form_options as $id => $name) {
-                $selected = in_array($id, $assigned, true) ? 'selected' : '';
-                echo '<option value="' . esc_attr($id) . '" ' . $selected . '>' . esc_html($name) . '</option>';
+                $checked = in_array($id, $assigned, true) ? 'checked' : '';
+                echo '<label style="margin-right:10px;"><input type="checkbox" name="ayotte_assigned_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '" ' . $checked . '> ' . esc_html($name) . '</label>';
             }
-            echo '</select></td>';
+            echo '</td>';
+ main
             echo '</tr>';
         }
         echo '</tbody></table>';
@@ -119,8 +123,8 @@ class Ayotte_Admin_Panel {
             update_option('ayotte_form_sets', $sets);
         }
 
-        if (isset($_POST['ayotte_available_forms']) && check_admin_referer('ayotte_form_sets')) {
-            $selected = array_map('intval', (array) $_POST['ayotte_available_forms']);
+        if (!empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'ayotte_form_sets') && !isset($_POST['new_set'])) {
+            $selected = array_map('intval', (array) ($_POST['ayotte_available_forms'] ?? []));
             update_option('ayotte_available_forms', $selected);
         }
 
