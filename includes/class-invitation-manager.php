@@ -1,22 +1,6 @@
 <?php
 class Invitation_Manager {
 
-    public function generate_token($email) {
-        $token = bin2hex(random_bytes(16));
-        $expiry = time() + WEEK_IN_SECONDS;
-        add_option("ayotte_invite_{$token}", ['email' => $email, 'expires' => $expiry]);
-        ayotte_log_message('INFO', "Generated token for $email");
-        return $token;
-    }
-
-    public function validate_token($token) {
-        $data = get_option("ayotte_invite_{$token}");
-        if ($data && $data['expires'] > time()) {
-            return $data['email'];
-        }
-        return false;
-    }
-
     public function create_customer_user($email) {
         $user = get_user_by('email', $email);
         if ($user) {
