@@ -88,11 +88,39 @@ class Ayotte_Admin_Panel {
             $sets[] = sanitize_text_field($_POST['new_set']);
             update_option('ayotte_form_sets', $sets);
         }
-        $sets = get_option('ayotte_form_sets', []);
-        echo '<div class="wrap"><h1>Form Sets</h1><form method="post">';
+
+        if (isset($_POST['ayotte_available_forms']) && check_admin_referer('ayotte_form_sets')) {
+            $selected = array_map('intval', (array) $_POST['ayotte_available_forms']);
+            update_option('ayotte_available_forms', $selected);
+        }
+
+        $sets     = get_option('ayotte_form_sets', []);
+        $selected = get_option('ayotte_available_forms', []);
+        $forms    = class_exists('Forminator_API') ? Forminator_API::get_forms() : [];
+
+        echo '<div class="wrap">';
+        echo '<h1>Form Sets</h1>';
+
+        // Add new set form
+        echo '<form method="post">';
         wp_nonce_field('ayotte_form_sets');
-        echo '<input type="text" name="new_set" placeholder="Form set name" />';
-        echo '<button type="submit" class="button">Add</button></form><ul>';
+        echo '<p><input type="text" name="new_set" placeholder="Form set name" /> ';
+        echo '<button type="submit" class="button">Add</button></p>';
+        echo '</form>';
+
+        echo '<h2>Available Forms</h2>';
+        echo '<form method="post">';
+        wp_nonce_field('ayotte_form_sets');
+
+        foreach ($forms as $form) {
+            $checked = in_array($form->id, $selected, true) ? 'checked' : '';
+            echo '<p><label><input type="checkbox" name="ayotte_available_forms[]" value="' . esc_attr($form->id) . '" ' . $checked . '> ' . esc_html($form->name) . '</label></p>';
+        }
+
+        echo '<p><button type="submit" class="button button-primary">Save Forms</button></p>';
+        echo '</form>';
+
+        echo '<h2>Form Sets</h2><ul>';
         foreach ($sets as $set) echo '<li>' . esc_html($set) . '</li>';
         echo '</ul></div>';
     }
