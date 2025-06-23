@@ -17,6 +17,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-email-sender.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-admin-panel.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-form-manager.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-progress-tracker.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-submission-redirect.php';
 
 // Logging
 if (!function_exists('ayotte_log_message')) {
@@ -84,6 +85,7 @@ function ayotte_precourse_init() {
     (new Ayotte_Admin_Panel())->init();
     (new Ayotte_Form_Manager())->init();
     (new Ayotte_Progress_Tracker())->init();
+    (new Ayotte_Submission_Redirect())->init();
 }
 add_action('plugins_loaded', 'ayotte_precourse_init');
 
