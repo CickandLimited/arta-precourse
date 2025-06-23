@@ -111,27 +111,39 @@ class Ayotte_Progress_Tracker {
                 continue;
             }
 
-            $args = [
-                'paged'    => 1,
-                'per_page' => 1,
-                'search'   => [
-                    'fields' => [
-                        [
-                            'name'  => 'Email',
-                            'value' => $email,
-                        ],
-                    ],
-                ],
-            ];
 
-            $entries = Forminator_API::get_entries($form_id, $args);
+            $entries = [];
+            try {
+                $entries = Forminator_API::get_entries($form_id, ['paged' => 1, 'per_page' => 50]);
+            } catch (Throwable $e) {
+                continue;
+            }
+
             if ($entries && !empty($entries->entries)) {
-                $entry = $entries->entries[0];
-                $entry_id = $entry->entry_id ?? ($entry->id ?? 0);
-                if ($entry_id) {
-                    update_user_meta($user_id, "ayotte_form_{$form_id}_entry", $entry_id);
+                foreach ($entries->entries as $entry) {
+                    $entry_id = $entry->entry_id ?? ($entry->id ?? 0);
+                    $meta     = $entry->meta_data ?? [];
+                    $entry_email = '';
+                    if (is_array($meta)) {
+                        foreach ($meta as $m) {
+                            $name  = $m['name'] ?? ($m->name ?? '');
+                            $value = $m['value'] ?? ($m->value ?? '');
+                            if ($name === 'Email') {
+                                $entry_email = $value;
+                                break;
+                            }
+                        }
+                    }
+
+                    if ($entry_email && strcasecmp($entry_email, $email) === 0) {
+                        if ($entry_id) {
+                            update_user_meta($user_id, "ayotte_form_{$form_id}_entry", $entry_id);
+                        }
+                        update_user_meta($user_id, "ayotte_form_{$form_id}_status", 'complete');
+                        break;
+                    }
                 }
-                update_user_meta($user_id, "ayotte_form_{$form_id}_status", 'complete');
+
             }
         }
 
