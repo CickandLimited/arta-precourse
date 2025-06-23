@@ -19,6 +19,31 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-form-manager.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-progress-tracker.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-submission-redirect.php';
 
+/**
+ * Enqueue front end assets.
+ */
+function ayotte_precourse_enqueue_assets() {
+    $base_url = plugin_dir_url(__FILE__);
+    wp_enqueue_style(
+        'ayotte-precourse-style',
+        $base_url . 'assets/css/style.css',
+        [],
+        AYOTTE_PRECOURSE_VERSION
+    );
+
+    $script_path = __DIR__ . '/assets/js/script.js';
+    if (file_exists($script_path) && filesize($script_path) > 0) {
+        wp_enqueue_script(
+            'ayotte-precourse-script',
+            $base_url . 'assets/js/script.js',
+            ['jquery'],
+            AYOTTE_PRECOURSE_VERSION,
+            true
+        );
+    }
+}
+add_action('wp_enqueue_scripts', 'ayotte_precourse_enqueue_assets');
+
 // Logging
 if (!function_exists('ayotte_log_message')) {
     function ayotte_log_message($level, $message) {
