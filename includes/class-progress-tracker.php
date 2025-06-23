@@ -4,7 +4,8 @@ class Ayotte_Progress_Tracker {
         add_action('wp_ajax_ayotte_save_progress', [$this, 'save_progress']);
         add_action('wp_ajax_nopriv_ayotte_save_progress', [$this, 'save_progress']);
         // Track Forminator form submissions
-        add_action('forminator_custom_form_after_handle_submit', [$this, 'handle_form_submit'], 10, 1);
+        // form_id and entry_id are provided after the entry is stored
+        add_action('forminator_custom_form_after_save_entry', [$this, 'handle_form_submit'], 10, 2);
     }
 
     public function save_progress() {
@@ -23,35 +24,32 @@ class Ayotte_Progress_Tracker {
     /**
      * Mark forms complete when submitted and recalc overall progress.
      *
-     * @param int $form_id Submitted Forminator form ID
+     * @param int $entry_id Forminator entry ID
+     * @param int $form_id  Submitted form ID
      */
-    public function handle_form_submit($form_id) {
-        if (!is_user_logged_in()) {
+    public function handle_form_submit($entry_id, $form_id) {
+        $user_id = 0;
+        $assigned = [];
+
+        if (class_exists('Forminator_API') && method_exists('Forminator_API', 'get_entry')) {
+            $entry = Forminator_API::get_entry($form_id, $entry_id);
+            if ($entry && isset($entry->user_id)) {
+                $user_id = intval($entry->user_id);
+            }
+        }
+
+        if (!$user_id) {
+            $user_id = get_current_user_id();
+        }
+
+        if (!$user_id) {
             return;
         }
 
-        $user_id  = get_current_user_id();
         $assigned = (array) get_user_meta($user_id, 'ayotte_assigned_forms', true);
 
         if (!in_array($form_id, $assigned, true)) {
             return;
-        }
-
-        // Link the latest entry ID to the user for this form
-        $entry_id = null;
-        if (class_exists('Forminator_API')) {
-            $args    = [
-                'paged'    => 1,
-                'per_page' => 1,
-                'search'   => [
-                    'user_id' => $user_id,
-                ],
-            ];
-            $entries = Forminator_API::get_entries($form_id, $args);
-            if ($entries && !empty($entries->entries[0])) {
-                $entry   = $entries->entries[0];
-                $entry_id = $entry->entry_id ?? ($entry->id ?? null);
-            }
         }
 
         if ($entry_id) {
