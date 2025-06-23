@@ -1,0 +1,15 @@
+.ayotte-admin-panel textarea{
+    width:100%;
+    max-width:500px;
+}
+.ayotte-admin-panel table.widefat th,
+.ayotte-admin-panel table.widefat td{
+    vertical-align:middle;
+}
+.ayotte-admin-panel #logOutput{
+    background:#f9f9f9;
+    border:1px solid #ccd0d4;
+    padding:10px;
+    height:300px;
+    overflow:auto;
+}

@@ -3,7 +3,7 @@ class Ayotte_Admin_Panel {
 
     public function render_debug_console() {
         ?>
-        <div class="wrap">
+        <div class="wrap ayotte-admin-panel">
             <h1>Debug Console</h1>
             <button id="clearLogs">Clear Logs</button>
             <button id="sendTestInvite">Send Test Invite (kris@psss.uk)</button>
@@ -39,7 +39,7 @@ class Ayotte_Admin_Panel {
      */
     public function render_invite_panel() {
         ?>
-        <div class="wrap">
+        <div class="wrap ayotte-admin-panel">
             <h1>Ayotte Precourse Portal</h1>
             <p>Invite attendees by email and track progress.</p>
             <h2>Send Invitations</h2>
@@ -100,7 +100,7 @@ class Ayotte_Admin_Panel {
         }
 
 
-        echo '<div class="wrap"><h1>Student Progress</h1><form method="post">';
+        echo '<div class="wrap ayotte-admin-panel"><h1>Student Progress</h1><form method="post">';
         wp_nonce_field('ayotte_assign_forms');
         echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Forms</th><th>Unlock</th></tr></thead><tbody>';
         foreach ($users as $user) {
@@ -142,7 +142,7 @@ class Ayotte_Admin_Panel {
         $selected = get_option('ayotte_available_forms', []);
         $forms    = class_exists('Forminator_API') ? Forminator_API::get_forms() : [];
 
-        echo '<div class="wrap">';
+        echo '<div class="wrap ayotte-admin-panel">';
         echo '<h1>Form Sets</h1>';
 
         echo '<form method="post">';

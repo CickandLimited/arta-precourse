@@ -78,6 +78,7 @@ class Ayotte_Form_Manager {
         $progress = $progress ?: '0%';
 
         ob_start();
+        echo '<div class="ayotte-dashboard">';
         echo '<h2>Your Assigned Forms</h2>';
         echo '<p class="ayotte-progress-summary">Progress: ' . esc_html($progress) . '</p>';
 
@@ -121,6 +122,7 @@ class Ayotte_Form_Manager {
             }
             echo '</tbody></table>';
         }
+        echo '</div>';
 
         return ob_get_clean();
     }
