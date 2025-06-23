@@ -21,6 +21,7 @@ class Ayotte_Form_Manager {
         add_shortcode('ayotte_form_dashboard', [$this, 'render_dashboard']);
         add_action('wp_ajax_ayotte_save_precourse_form', [$this, 'save_form']);
         add_action('wp_ajax_nopriv_ayotte_save_precourse_form', [$this, 'save_form']);
+        add_action('wp_ajax_ayotte_request_unlock', [$this, 'request_unlock']);
 
         // Inject logged-in user email as hidden field when rendering Forminator forms
         add_filter('forminator_render_form', [$this, 'add_email_field'], 10, 2);
@@ -117,7 +118,6 @@ class Ayotte_Form_Manager {
                 }
 
                 $status   = get_user_meta($user_id, "ayotte_form_{$form_id}_status", true);
-                $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
 
                 $name = 'Form ' . $form_id;
                 if (class_exists('Forminator_API')) {
@@ -127,16 +127,11 @@ class Ayotte_Form_Manager {
                     }
                 }
 
-                $submitted = ($status === 'complete');
-                $locked    = $submitted && !$unlocked;
+                $submitted    = ($status === 'complete');
                 $status_label = $submitted ? 'Submitted' : 'Pending';
 
-                if ($locked) {
-                    $action = '<span class="dashicons dashicons-lock"></span>';
-                } else {
-                    $url    = esc_url(add_query_arg('form_id', $form_id, site_url('/precourse-form')));
-                    $action = '<a class="button" href="' . $url . '">' . ($submitted ? 'View' : 'Fill') . '</a>';
-                }
+                $url    = esc_url(add_query_arg('form_id', $form_id, site_url('/precourse-form')));
+                $action = '<a class="button" href="' . $url . '">' . ($submitted ? 'View' : 'Fill') . '</a>';
 
                 echo '<tr>';
                 echo '<td>' . esc_html($name) . '</td>';
@@ -185,11 +180,21 @@ class Ayotte_Form_Manager {
             return '<p>Form submitted.</p>';
         }
 
+        $status   = get_user_meta($user_id, "ayotte_form_{$form_id}_status", true);
+        $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
+        $locked   = ($status === 'complete' && !$unlocked);
+
         $html = '<div class="ayotte-readonly-form"><table class="widefat">';
         foreach ($fields as $label => $value) {
             $html .= '<tr><th>' . esc_html($label) . '</th><td>' . esc_html($value) . '</td></tr>';
         }
         $html .= '</table></div>';
+
+        if ($locked) {
+            $ajax = admin_url('admin-ajax.php');
+            $html .= '<p><button id="ayotteRequestUnlock">Request unlocking</button> <span id="ayotteUnlockMsg"></span></p>';
+            $html .= "<script>document.getElementById('ayotteRequestUnlock').onclick = async () => {const f=new FormData();f.append('action','ayotte_request_unlock');f.append('form_id','" . intval($form_id) . "');const r=await fetch('" . esc_url_raw($ajax) . "',{method:'POST',credentials:'same-origin',body:f});const d=await r.json();document.getElementById('ayotteUnlockMsg').textContent=d.data.message;};</script>";
+        }
 
         return $html;
     }
@@ -251,6 +256,24 @@ class Ayotte_Form_Manager {
         $this->email_added = true;
 
         return $html;
+    }
+
+    /**
+     * Handle unlock requests from students.
+     */
+    public function request_unlock() {
+        if (!is_user_logged_in()) wp_send_json_error(['message' => 'Not logged in']);
+        $form_id = intval($_POST['form_id'] ?? 0);
+        if (!$form_id) wp_send_json_error(['message' => 'Invalid form']);
+
+        $user_id = get_current_user_id();
+        update_user_meta($user_id, "ayotte_form_{$form_id}_unlock_request", current_time('mysql'));
+
+        $admin = get_option('admin_email');
+        $user  = wp_get_current_user();
+        wp_mail($admin, 'Unlock Request', "User {$user->user_email} requested unlocking for form {$form_id}.");
+
+        wp_send_json_success(['message' => 'Unlock request sent']);
     }
 
     /**
