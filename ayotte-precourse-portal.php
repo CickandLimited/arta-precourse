@@ -18,6 +18,30 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-admin-panel.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-form-manager.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-progress-tracker.php';
 
+// Enqueue styles for admin pages and frontend dashboard
+function ayotte_precourse_enqueue_admin($hook) {
+    if (strpos($hook, 'ayotte-precourse') === false) {
+        return;
+    }
+    wp_enqueue_style(
+        'ayotte-admin',
+        plugin_dir_url(__FILE__) . 'assets/css/admin.css',
+        [],
+        AYOTTE_PRECOURSE_VERSION
+    );
+}
+add_action('admin_enqueue_scripts', 'ayotte_precourse_enqueue_admin');
+
+function ayotte_precourse_enqueue_frontend() {
+    wp_enqueue_style(
+        'ayotte-frontend',
+        plugin_dir_url(__FILE__) . 'assets/css/frontend.css',
+        [],
+        AYOTTE_PRECOURSE_VERSION
+    );
+}
+add_action('wp_enqueue_scripts', 'ayotte_precourse_enqueue_frontend');
+
 // Logging
 if (!function_exists('ayotte_log_message')) {
     function ayotte_log_message($level, $message) {

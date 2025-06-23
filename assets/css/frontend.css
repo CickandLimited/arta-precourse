@@ -1,0 +1,19 @@
+.ayotte-dashboard table.widefat{
+    width:100%;
+    margin-top:20px;
+}
+.ayotte-dashboard .ayotte-progress-summary{
+    font-weight:bold;
+    margin-bottom:10px;
+}
+.ayotte-dashboard .button{
+    text-decoration:none;
+}
+#ayottePrecourseForm p{
+    margin-bottom:15px;
+}
+#ayottePrecourseForm input[type="text"],
+#ayottePrecourseForm textarea{
+    width:100%;
+    max-width:500px;
+}
