@@ -67,7 +67,7 @@ class Ayotte_Progress_Tracker {
      *
      * @param int $user_id
      */
-    private function recalculate_progress($user_id) {
+    public function recalculate_progress($user_id) {
         $assigned = (array) get_user_meta($user_id, 'ayotte_assigned_forms', true);
         $total    = count($assigned);
 
