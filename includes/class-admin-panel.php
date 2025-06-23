@@ -87,6 +87,8 @@ class Ayotte_Admin_Panel {
         }
 
         $users = get_users(['meta_key' => 'ayotte_precourse_token']);
+
+ main
         echo '<div class="wrap"><h1>Student Progress</h1><form method="post">';
         wp_nonce_field('ayotte_assign_forms');
         echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Forms</th></tr></thead><tbody>';
@@ -96,12 +98,14 @@ class Ayotte_Admin_Panel {
             echo '<tr>';
             echo '<td>' . esc_html($user->user_email) . '</td>';
             echo '<td>' . esc_html($progress ?: '0%') . '</td>';
+
             echo '<td>';
             foreach ($form_options as $id => $name) {
                 $checked = in_array($id, $assigned, true) ? 'checked' : '';
                 echo '<label style="margin-right:10px;"><input type="checkbox" name="ayotte_assigned_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '" ' . $checked . '> ' . esc_html($name) . '</label>';
             }
             echo '</td>';
+ main
             echo '</tr>';
         }
         echo '</tbody></table>';
