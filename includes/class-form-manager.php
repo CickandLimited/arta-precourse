@@ -49,10 +49,17 @@ class Ayotte_Form_Manager {
      */
     public function render_dashboard() {
         if (!is_user_logged_in()) return '<p>Please log in first.</p>';
+        $user_id = get_current_user_id();
+        $assigned = (array) get_user_meta($user_id, 'ayotte_assigned_forms', true);
+
         ob_start();
-        echo '<h2>Your Assigned Forms</h2><ul>';
-        echo '<li><a href="' . esc_url( site_url('/precourse-form') ) . '">Precourse Form</a></li>';
-        echo '</ul>';
+        echo '<h2>Your Assigned Forms</h2>';
+        foreach ($assigned as $form_id) {
+            $form_id = intval($form_id);
+            if ($form_id) {
+                echo do_shortcode('[forminator_form id="' . $form_id . '"]');
+            }
+        }
         return ob_get_clean();
     }
 
