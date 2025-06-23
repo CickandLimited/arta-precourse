@@ -71,9 +71,21 @@ class Ayotte_Admin_Panel {
      */
     public function render_tracking_dashboard() {
         if (isset($_POST['ayotte_assigned_forms']) && check_admin_referer('ayotte_assign_forms')) {
+            $tracker = new Ayotte_Progress_Tracker();
             foreach ((array) $_POST['ayotte_assigned_forms'] as $user_id => $forms) {
-                $forms = array_map('intval', (array) $forms);
-                update_user_meta((int) $user_id, 'ayotte_assigned_forms', $forms);
+                $user_id = (int) $user_id;
+                $forms   = array_map('intval', (array) $forms);
+                update_user_meta($user_id, 'ayotte_assigned_forms', $forms);
+
+                $unlock = $_POST['ayotte_unlock_forms'][$user_id] ?? [];
+                foreach ((array) $unlock as $form_id) {
+                    $form_id = intval($form_id);
+                    delete_user_meta($user_id, "ayotte_form_{$form_id}_status");
+                }
+
+                if (!empty($unlock)) {
+                    $tracker->recalculate_progress($user_id);
+                }
             }
         }
 
@@ -91,7 +103,7 @@ class Ayotte_Admin_Panel {
 
         echo '<div class="wrap"><h1>Student Progress</h1><form method="post">';
         wp_nonce_field('ayotte_assign_forms');
-        echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Forms</th></tr></thead><tbody>';
+        echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Forms</th><th>Unlock</th></tr></thead><tbody>';
         foreach ($users as $user) {
             $progress = get_user_meta($user->ID, 'ayotte_progress', true);
             $assigned = (array) get_user_meta($user->ID, 'ayotte_assigned_forms', true);
@@ -102,6 +114,13 @@ class Ayotte_Admin_Panel {
             foreach ($form_options as $id => $name) {
                 $checked = in_array($id, $assigned, true) ? 'checked' : '';
                 echo '<label style="margin-right:10px;"><input type="checkbox" name="ayotte_assigned_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '" ' . $checked . '> ' . esc_html($name) . '</label>';
+            }
+            echo '</td>';
+
+            echo '<td>';
+            foreach ($assigned as $id) {
+                $name = $form_options[$id] ?? 'Form ' . $id;
+                echo '<label style="margin-right:10px;"><input type="checkbox" name="ayotte_unlock_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '"> ' . esc_html($name) . '</label>';
             }
             echo '</td>';
 
