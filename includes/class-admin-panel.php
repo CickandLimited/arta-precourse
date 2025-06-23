@@ -83,6 +83,13 @@ class Ayotte_Admin_Panel {
                 foreach ((array) $unlock as $form_id) {
                     $form_id = intval($form_id);
                     delete_user_meta($user_id, "ayotte_form_{$form_id}_status");
+                    delete_user_meta($user_id, "ayotte_form_{$form_id}_unlock_request");
+                }
+
+                $clear = $_POST['ayotte_clear_requests'][$user_id] ?? [];
+                foreach ((array) $clear as $form_id) {
+                    $form_id = intval($form_id);
+                    delete_user_meta($user_id, "ayotte_form_{$form_id}_unlock_request");
                 }
 
                 // Always recalculate progress after updating assignments
@@ -126,7 +133,14 @@ class Ayotte_Admin_Panel {
                     $url  = admin_url('admin.php?page=precourse-view-submission&form_id=' . intval($id) . '&user_id=' . intval($user->ID));
                     $view = ' <a href="' . esc_url($url) . '">View</a>';
                 }
-                echo '<label style="margin-right:10px;"><input type="checkbox" name="ayotte_unlock_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '"> ' . esc_html($name) . $view . '</label>';
+                $request = get_user_meta($user->ID, "ayotte_form_{$id}_unlock_request", true);
+                echo '<div style="margin-bottom:5px;">';
+                echo '<label><input type="checkbox" name="ayotte_unlock_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '"> ' . esc_html($name) . $view . '</label>';
+                if ($request) {
+                    echo ' <span style="color:#d9534f;">Unlock requested</span>';
+                    echo ' <label><input type="checkbox" name="ayotte_clear_requests[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '">Clear</label>';
+                }
+                echo '</div>';
             }
             echo '</td>';
 
