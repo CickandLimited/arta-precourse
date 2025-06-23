@@ -283,7 +283,7 @@ class Ayotte_Form_Manager {
      * Handle form save
      */
     public function save_form() {
-        check_admin_referer('ayotte_precourse_form');
+        check_admin_referer('ayotte_precourse_form', 'ayotte_precourse_nonce');
         if (!is_user_logged_in()) wp_send_json_error(['message' => 'Not logged in']);
         $user_id = get_current_user_id();
         update_user_meta($user_id, 'ayotte_phone', sanitize_text_field($_POST['phone'] ?? ''));
