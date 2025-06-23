@@ -76,7 +76,8 @@ function ayotte_precourse_init() {
         return;
     }
 
-    add_action('admin_menu', 'ayotte_add_forminator_submenu');
+    // Register the Forminator submenu after the main menu is created.
+    add_action('admin_menu', 'ayotte_add_forminator_submenu', 20);
 
     $plugin = new Ayotte_Precourse();
     $plugin->run();
