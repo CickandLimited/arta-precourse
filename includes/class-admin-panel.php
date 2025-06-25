@@ -109,7 +109,7 @@ class Ayotte_Admin_Panel {
         }
 
         $available_ids = get_option('ayotte_available_forms', []);
-        $all_forms     = class_exists('Forminator_API') ? Forminator_API::get_forms() : [];
+        $all_forms     = Ayotte_Progress_Tracker::forminator_get_forms() ?: [];
         $form_options  = [];
         foreach ($all_forms as $form) {
             if (in_array($form->id, $available_ids, true)) {
@@ -204,7 +204,7 @@ class Ayotte_Admin_Panel {
         }
 
         $selected = get_option('ayotte_available_forms', []);
-        $forms    = class_exists('Forminator_API') ? Forminator_API::get_forms() : [];
+        $forms    = Ayotte_Progress_Tracker::forminator_get_forms() ?: [];
 
         echo '<div class="wrap ayotte-admin-panel">';
         echo '<h1>Form Sets</h1>';

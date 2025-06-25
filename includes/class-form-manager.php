@@ -114,11 +114,9 @@ class Ayotte_Form_Manager {
                 $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
 
                 $name = 'Form ' . $form_id;
-                if (class_exists('Forminator_API')) {
-                    $form = Forminator_API::get_form($form_id);
-                    if ($form && !is_wp_error($form)) {
-                        $name = $form->name;
-                    }
+                $form = Ayotte_Progress_Tracker::forminator_get_form($form_id);
+                if ($form && !is_wp_error($form)) {
+                    $name = $form->name;
                 }
 
                 $submitted = ($status === 'completed');
@@ -177,7 +175,7 @@ class Ayotte_Form_Manager {
                 'user_id' => $user_id,
             ],
         ];
-        $entries  = Forminator_API::get_entries($form_id, $args);
+        $entries  = Ayotte_Progress_Tracker::forminator_get_entries($form_id, $args);
         $entry    = $entries && !empty($entries->entries[0]) ? $entries->entries[0] : null;
 
         if (!$entry) {

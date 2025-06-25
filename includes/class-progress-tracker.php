@@ -22,6 +22,51 @@ class Ayotte_Progress_Tracker {
     }
 
     /**
+     * Generic wrapper for Forminator API calls with optional debug logging.
+     *
+     * @param string $method Method name on Forminator_API
+     * @param array  $args   Arguments for the API call
+     * @return mixed|null API response or null on failure
+     */
+    public static function forminator_call($method, array $args = []) {
+        if (!class_exists('Forminator_API') || !method_exists('Forminator_API', $method)) {
+            return null;
+        }
+
+        $response = call_user_func_array(['Forminator_API', $method], $args);
+
+        self::log_api_debug($method, $args, $response);
+
+        return $response;
+    }
+
+    public static function forminator_get_entry($form_id, $entry_id) {
+        return self::forminator_call('get_entry', [$form_id, $entry_id]);
+    }
+
+    public static function forminator_get_entries(...$args) {
+        return self::forminator_call('get_entries', $args);
+    }
+
+    public static function forminator_get_form($form_id) {
+        return self::forminator_call('get_form', [$form_id]);
+    }
+
+    public static function forminator_get_forms() {
+        return self::forminator_call('get_forms');
+    }
+
+    private static function log_api_debug($method, $args, $response) {
+        if (!get_option('ayotte_debug_enabled', false)) {
+            return;
+        }
+
+        $params  = substr(json_encode($args), 0, 200);
+        $result  = substr(json_encode($response), 0, 200);
+        ayotte_log_message('DEBUG', "$method params={$params} result={$result}");
+    }
+
+    /**
      * Determine the status of a user's form entry.
      *
      * @param int $form_id Forminator form ID
@@ -40,8 +85,8 @@ class Ayotte_Progress_Tracker {
 
         $entry_id = get_user_meta($user_id, "ayotte_form_{$form_id}_entry", true);
 
-        if ($entry_id && method_exists('Forminator_API', 'get_entry')) {
-            $entry = Forminator_API::get_entry($form_id, $entry_id);
+        if ($entry_id) {
+            $entry = self::forminator_get_entry($form_id, $entry_id);
 
             if (!$entry || is_wp_error($entry)) {
                 ayotte_log_message('ERROR', "Entry lookup failed for form $form_id entry $entry_id");
@@ -66,7 +111,7 @@ class Ayotte_Progress_Tracker {
             'drafts' => true,
         ];
 
-        $entries = Forminator_API::get_entries($form_id, 0, 1, $args);
+        $entries = self::forminator_get_entries($form_id, 0, 1, $args);
 
         if (!$entries || empty($entries->entries)) {
             ayotte_log_message('ERROR', "No entries found for form $form_id and user $user_id");
@@ -92,11 +137,9 @@ class Ayotte_Progress_Tracker {
         $user_id = 0;
         $assigned = [];
 
-        if (class_exists('Forminator_API') && method_exists('Forminator_API', 'get_entry')) {
-            $entry = Forminator_API::get_entry($form_id, $entry_id);
-            if ($entry && isset($entry->user_id)) {
-                $user_id = intval($entry->user_id);
-            }
+        $entry = self::forminator_get_entry($form_id, $entry_id);
+        if ($entry && isset($entry->user_id)) {
+            $user_id = intval($entry->user_id);
         }
 
         if (!$user_id) {
