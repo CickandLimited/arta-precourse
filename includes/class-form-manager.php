@@ -170,8 +170,9 @@ class Ayotte_Form_Manager {
 
         $email   = wp_get_current_user()->user_email;
 
-        // Call Forminator_API::get_entries with explicit pagination defaults
-        // to avoid passing a search array as the second argument
+        // Fetch entries for this form using the wrapper so we get entry objects
+        // back. The pagination defaults avoid passing search criteria as the
+        // second parameter.
         $entries = Ayotte_Progress_Tracker::forminator_get_entries($form_id, 0, 1);
 
         $entry   = null;
