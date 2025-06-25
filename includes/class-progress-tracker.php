@@ -178,6 +178,9 @@ class Ayotte_Progress_Tracker {
 
         if ($total === 0) {
             update_user_meta($user_id, 'ayotte_progress', 0);
+            if (get_option('ayotte_debug_enabled', false)) {
+                ayotte_log_message('DEBUG', "Recalculated progress user {$user_id}: forms=[] percent=0");
+            }
             return;
         }
 
@@ -199,5 +202,10 @@ class Ayotte_Progress_Tracker {
 
         update_user_meta($user_id, 'ayotte_progress', $percent);
         update_user_meta($user_id, 'ayotte_progress_updated', current_time('mysql'));
+
+        if (get_option('ayotte_debug_enabled', false)) {
+            $forms = implode(',', $assigned);
+            ayotte_log_message('DEBUG', "Recalculated progress user {$user_id}: forms=[{$forms}] percent={$percent}");
+        }
     }
 }
