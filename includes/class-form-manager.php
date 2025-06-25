@@ -74,11 +74,25 @@ class Ayotte_Form_Manager {
         $user_id  = get_current_user_id();
         $assigned = (array) get_user_meta($user_id, 'ayotte_assigned_forms', true);
 
-        // Recalculate progress so status reflects latest form entries.
         $tracker = new Ayotte_Progress_Tracker();
-        $tracker->recalculate_progress($user_id);
-        $progress = $tracker->get_progress($user_id);
-        $progress = $progress ?: '0%';
+        $status_map = [];
+        $changed    = false;
+        foreach ($assigned as $fid) {
+            $fid    = intval($fid);
+            if (!$fid) continue;
+            $status = $tracker->get_form_status($fid, $user_id);
+            $status_map[$fid] = $status;
+            $stored = get_user_meta($user_id, "ayotte_form_{$fid}_status", true);
+            if ($status !== $stored) {
+                update_user_meta($user_id, "ayotte_form_{$fid}_status", $status);
+                $changed = true;
+            }
+        }
+
+        if ($changed) {
+            $tracker->recalculate_progress($user_id);
+        }
+        $progress = $tracker->get_progress($user_id) ?: '0%';
 
         ob_start();
         echo '<div class="ayotte-dashboard">';
@@ -95,8 +109,7 @@ class Ayotte_Form_Manager {
                     continue;
                 }
 
-                // Determine the status using the progress tracker
-                $status   = $tracker->get_form_status($form_id, $user_id);
+                $status   = $status_map[$form_id] ?? $tracker->get_form_status($form_id, $user_id);
                 $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
 
                 $name = 'Form ' . $form_id;

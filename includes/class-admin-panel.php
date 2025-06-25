@@ -107,20 +107,23 @@ class Ayotte_Admin_Panel {
         echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Status</th><th>Forms</th><th>Unlock</th></tr></thead><tbody>';
         foreach ($users as $user) {
             $assigned = (array) get_user_meta($user->ID, 'ayotte_assigned_forms', true);
-            $points   = 0;
             $status_items = [];
+            $changed = false;
+
             foreach ($assigned as $form_id) {
                 $status = $tracker->get_form_status($form_id, $user->ID);
-                update_user_meta($user->ID, "ayotte_form_{$form_id}_status", $status);
+                $stored = get_user_meta($user->ID, "ayotte_form_{$form_id}_status", true);
+                if ($status !== $stored) {
+                    update_user_meta($user->ID, "ayotte_form_{$form_id}_status", $status);
+                    $changed = true;
+                }
                 $name   = $form_options[$form_id] ?? 'Form ' . $form_id;
                 switch ($status) {
                     case 'completed':
                         $label = 'Completed';
-                        $points += 100;
                         break;
                     case 'draft':
                         $label = 'Draft';
-                        $points += 50;
                         break;
                     default:
                         $label = 'Outstanding';
@@ -129,9 +132,10 @@ class Ayotte_Admin_Panel {
                 $status_items[] = '<li>' . esc_html($name . ' - ' . $label) . '</li>';
             }
 
-            $progress = $assigned ? intval($points / count($assigned)) : 0;
-            $progress_display = $progress >= 100 ? 'complete' : $progress . '%';
-            update_user_meta($user->ID, 'ayotte_progress', $progress_display);
+            if ($changed) {
+                $tracker->recalculate_progress($user->ID);
+            }
+            $progress_display = $tracker->get_progress($user->ID) ?: '0%';
 
             echo '<tr>';
             echo '<td>' . esc_html($user->user_email) . '</td>';
