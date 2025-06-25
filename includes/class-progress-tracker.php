@@ -74,10 +74,6 @@ class Ayotte_Progress_Tracker {
      * @return string completed|draft|outstanding
      */
     public function get_form_status($form_id, $user_id) {
-        $stored = get_user_meta($user_id, "ayotte_form_{$form_id}_status", true);
-        if (in_array($stored, ['completed', 'draft', 'outstanding'], true)) {
-            return $stored;
-        }
 
         if (!class_exists('Forminator_API')) {
             return 'outstanding';
@@ -104,8 +100,10 @@ class Ayotte_Progress_Tracker {
         }
 
         $email    = get_userdata($user_id)->user_email;
+
         // Explicitly specify default pagination to ensure arguments align
         $entries  = self::forminator_get_entries($form_id, 0, 1);
+
 
         if (!$entries || empty($entries->entries)) {
             ayotte_log_message('ERROR', "No entries found for form $form_id");
