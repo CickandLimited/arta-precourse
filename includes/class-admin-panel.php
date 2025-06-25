@@ -120,16 +120,24 @@ class Ayotte_Admin_Panel {
                 $name   = $form_options[$form_id] ?? 'Form ' . $form_id;
                 switch ($status) {
                     case 'completed':
-                        $label = 'Completed';
+                        $label   = 'Completed';
+                        $percent = 100;
                         break;
                     case 'draft':
-                        $label = 'Draft';
+                        $label   = 'Draft';
+                        $percent = 50;
                         break;
                     default:
-                        $label = 'Outstanding';
+                        $label   = 'Outstanding';
+                        $percent = 0;
                         break;
                 }
-                $status_items[] = '<li>' . esc_html($name . ' - ' . $label) . '</li>';
+                $progress_class = ($percent === 100) ? 'completed'
+                                 : (($percent >= 50) ? 'draft' : 'outstanding');
+                $status_items[] = '<li>' . esc_html($name . ' - ' . $label)
+                    . '<div class="ayotte-progress-bar"><div class="ayotte-progress-fill '
+                    . $progress_class . '" style="width:' . $percent . '%"></div></div>'
+                    . '</li>';
             }
 
             if ($changed) {
@@ -137,10 +145,15 @@ class Ayotte_Admin_Panel {
             }
             $progress_val     = intval($tracker->get_progress($user->ID));
             $progress_display = $progress_val . '%';
+            $progress_class   = ($progress_val == 100) ? 'completed'
+                                : (($progress_val >= 50) ? 'draft' : 'outstanding');
 
             echo '<tr>';
             echo '<td>' . esc_html($user->user_email) . '</td>';
-            echo '<td>' . esc_html($progress_display) . '</td>';
+            echo '<td class="progress-cell">'
+                 . esc_html($progress_display)
+                 . '<div class="ayotte-progress-bar"><div class="ayotte-progress-fill ' . $progress_class . '" style="width:' . $progress_val . '%"></div></div>'
+                 . '</td>';
             echo '<td><ul class="status-list">' . implode('', $status_items) . '</ul></td>';
             echo '<td><ul class="form-checkbox-list">';
             foreach ($form_options as $id => $name) {
