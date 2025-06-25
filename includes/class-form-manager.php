@@ -74,7 +74,10 @@ class Ayotte_Form_Manager {
         $user_id  = get_current_user_id();
         $assigned = (array) get_user_meta($user_id, 'ayotte_assigned_forms', true);
 
-        $progress = get_user_meta($user_id, 'ayotte_progress', true);
+        // Recalculate progress so status reflects latest form entries.
+        $tracker = new Ayotte_Progress_Tracker();
+        $tracker->recalculate_progress($user_id);
+        $progress = $tracker->get_progress($user_id);
         $progress = $progress ?: '0%';
 
         ob_start();
@@ -92,7 +95,8 @@ class Ayotte_Form_Manager {
                     continue;
                 }
 
-                $status   = get_user_meta($user_id, "ayotte_form_{$form_id}_status", true);
+                // Determine the status using the progress tracker
+                $status   = $tracker->get_form_status($form_id, $user_id);
                 $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
 
                 $name = 'Form ' . $form_id;
@@ -103,20 +107,37 @@ class Ayotte_Form_Manager {
                     }
                 }
 
-                $submitted = ($status === 'complete');
+                $submitted = ($status === 'completed');
                 $locked    = $submitted && !$unlocked;
-                $status_label = $submitted ? 'Submitted' : 'Pending';
+                switch ($status) {
+                    case 'completed':
+                        $status_label = 'Completed';
+                        break;
+                    case 'draft':
+                        $status_label = 'Draft';
+                        break;
+                    default:
+                        $status_label = 'Outstanding';
+                        break;
+                }
 
                 if ($locked) {
                     $action = '<span class="dashicons dashicons-lock"></span>';
                 } else {
-                    $url    = esc_url(add_query_arg('form_id', $form_id, site_url('/precourse-form')));
-                    $action = '<a class="button" href="' . $url . '">' . ($submitted ? 'View' : 'Fill') . '</a>';
+                    $url  = esc_url(add_query_arg('form_id', $form_id, site_url('/precourse-form')));
+                    if ($submitted) {
+                        $text = 'View';
+                    } elseif ($status === 'draft') {
+                        $text = 'Continue';
+                    } else {
+                        $text = 'Start';
+                    }
+                    $action = '<a class="button" href="' . $url . '">' . $text . '</a>';
                 }
 
                 echo '<tr>';
                 echo '<td>' . esc_html($name) . '</td>';
-                echo '<td>' . esc_html($status_label) . '</td>';
+                echo '<td><span class="ayotte-status ' . esc_attr($status) . '">' . esc_html($status_label) . '</span></td>';
                 echo '<td>' . $action . '</td>';
                 echo '</tr>';
             }
