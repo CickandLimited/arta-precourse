@@ -159,7 +159,7 @@ class Ayotte_Admin_Panel {
                         $percent = 100;
                         break;
                     case 'draft':
-                        $label   = 'Draft';
+                        $label   = 'In Progress';
                         $percent = 50;
                         break;
                     default:
