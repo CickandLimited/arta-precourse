@@ -38,13 +38,30 @@ class Ayotte_Progress_Tracker {
             return 'outstanding';
         }
 
-        $user       = get_user_by('ID', $user_id);
-        $identifier = $user ? $user->user_login : $user_id;
+        $entry_id = get_user_meta($user_id, "ayotte_form_{$form_id}_entry", true);
+
+        if ($entry_id && method_exists('Forminator_API', 'get_entry')) {
+            $entry = Forminator_API::get_entry($form_id, $entry_id);
+
+            if (!$entry || is_wp_error($entry)) {
+                ayotte_log_message('ERROR', "Entry lookup failed for form $form_id entry $entry_id");
+            } else {
+                if (isset($entry->user_id) && intval($entry->user_id) !== intval($user_id)) {
+                    ayotte_log_message('ERROR', "Entry $entry_id user mismatch: expected $user_id got {$entry->user_id}");
+                }
+
+                if (!empty($entry->draft) || (isset($entry->status) && $entry->status === 'draft')) {
+                    return 'draft';
+                }
+
+                return 'completed';
+            }
+        }
 
         $args = [
             'search' => [
-                'field' => 'hidden-1',
-                'value' => $identifier,
+                'field' => 'user_id',
+                'value' => $user_id,
             ],
             'drafts' => true,
         ];
@@ -52,6 +69,7 @@ class Ayotte_Progress_Tracker {
         $entries = Forminator_API::get_entries($form_id, 0, 1, $args);
 
         if (!$entries || empty($entries->entries)) {
+            ayotte_log_message('ERROR', "No entries found for form $form_id and user $user_id");
             return 'outstanding';
         }
 
@@ -97,6 +115,9 @@ class Ayotte_Progress_Tracker {
 
         if ($entry_id) {
             update_user_meta($user_id, "ayotte_form_{$form_id}_entry", $entry_id);
+            ayotte_log_message('INFO', "Recorded entry $entry_id for form $form_id user $user_id");
+        } else {
+            ayotte_log_message('ERROR', "Missing entry ID for form $form_id submission by user $user_id");
         }
 
         update_user_meta($user_id, "ayotte_form_{$form_id}_status", 'completed');
