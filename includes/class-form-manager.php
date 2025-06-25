@@ -126,7 +126,7 @@ class Ayotte_Form_Manager {
                         $status_label = 'Completed';
                         break;
                     case 'draft':
-                        $status_label = 'Draft';
+                        $status_label = 'In Progress';
                         break;
                     default:
                         $status_label = 'Outstanding';
@@ -168,15 +168,25 @@ class Ayotte_Form_Manager {
             return '<p>Form submitted.</p>';
         }
 
-        $args     = [
-            'paged'    => 1,
-            'per_page' => 1,
-            'search'   => [
-                'user_id' => $user_id,
-            ],
-        ];
-        $entries  = Ayotte_Progress_Tracker::forminator_get_entries($form_id, $args);
-        $entry    = $entries && !empty($entries->entries[0]) ? $entries->entries[0] : null;
+        $email   = wp_get_current_user()->user_email;
+        $entries = Ayotte_Progress_Tracker::forminator_get_entries($form_id);
+        $entry   = null;
+
+        if ($entries && !empty($entries->entries)) {
+            foreach ($entries->entries as $e) {
+                if (!isset($e->meta_data) || !is_array($e->meta_data)) {
+                    continue;
+                }
+                foreach ($e->meta_data as $meta) {
+                    $name  = $meta['name'] ?? ($meta->name ?? '');
+                    $value = $meta['value'] ?? ($meta->value ?? '');
+                    if ($name === 'hidden-1' && $value === $email) {
+                        $entry = $e;
+                        break 2;
+                    }
+                }
+            }
+        }
 
         if (!$entry) {
             return '<p>Form submitted.</p>';
