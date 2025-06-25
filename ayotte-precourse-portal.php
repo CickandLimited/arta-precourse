@@ -147,8 +147,8 @@ add_action('ayotte_progress_reminder', 'ayotte_send_progress_reminders');
 function ayotte_send_progress_reminders() {
     $users = get_users(['meta_key' => 'ayotte_precourse_token']);
     foreach ($users as $user) {
-        $progress = get_user_meta($user->ID, 'ayotte_progress', true);
-        if ($progress !== 'complete') {
+        $progress = intval(get_user_meta($user->ID, 'ayotte_progress', true));
+        if ($progress < 100) {
             $emailer = new Ayotte_Email_Sender();
             $emailer->send_email($user->user_email, 'Reminder', 'Please complete your precourse forms.');
         }
