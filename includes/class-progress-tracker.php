@@ -22,6 +22,44 @@ class Ayotte_Progress_Tracker {
     }
 
     /**
+     * Determine the status of a user's form entry.
+     *
+     * @param int $form_id Forminator form ID
+     * @param int $user_id WordPress user ID
+     * @return string completed|draft|outstanding
+     */
+    public function get_form_status($form_id, $user_id) {
+        if (!class_exists('Forminator_API')) {
+            return 'outstanding';
+        }
+
+        $user       = get_user_by('ID', $user_id);
+        $identifier = $user ? $user->user_login : $user_id;
+
+        $args = [
+            'search' => [
+                'field' => 'hidden-1',
+                'value' => $identifier,
+            ],
+            'drafts' => true,
+        ];
+
+        $entries = Forminator_API::get_entries($form_id, 0, 1, $args);
+
+        if (!$entries || empty($entries->entries)) {
+            return 'outstanding';
+        }
+
+        $entry = $entries->entries[0];
+
+        if (!empty($entry->draft) || (isset($entry->status) && $entry->status === 'draft')) {
+            return 'draft';
+        }
+
+        return 'completed';
+    }
+
+    /**
      * Mark forms complete when submitted and recalc overall progress.
      *
      * @param int $entry_id Forminator entry ID
@@ -56,7 +94,7 @@ class Ayotte_Progress_Tracker {
             update_user_meta($user_id, "ayotte_form_{$form_id}_entry", $entry_id);
         }
 
-        update_user_meta($user_id, "ayotte_form_{$form_id}_status", 'complete');
+        update_user_meta($user_id, "ayotte_form_{$form_id}_status", 'completed');
         $this->recalculate_progress($user_id);
     }
 
@@ -74,14 +112,18 @@ class Ayotte_Progress_Tracker {
             return;
         }
 
-        $complete = 0;
+        $points = 0;
         foreach ($assigned as $id) {
-            if (get_user_meta($user_id, "ayotte_form_{$id}_status", true) === 'complete') {
-                $complete++;
+            $status = $this->get_form_status($id, $user_id);
+            update_user_meta($user_id, "ayotte_form_{$id}_status", $status);
+            if ($status === 'completed') {
+                $points += 100;
+            } elseif ($status === 'draft') {
+                $points += 50;
             }
         }
 
-        $percent = intval(($complete / $total) * 100);
+        $percent = intval($points / $total);
         $progress = $percent >= 100 ? 'complete' : $percent . '%';
 
         update_user_meta($user_id, 'ayotte_progress', $progress);
