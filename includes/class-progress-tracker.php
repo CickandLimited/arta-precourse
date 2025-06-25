@@ -108,7 +108,7 @@ class Ayotte_Progress_Tracker {
         $total    = count($assigned);
 
         if ($total === 0) {
-            update_user_meta($user_id, 'ayotte_progress', '0%');
+            update_user_meta($user_id, 'ayotte_progress', 0);
             return;
         }
 
@@ -124,9 +124,11 @@ class Ayotte_Progress_Tracker {
         }
 
         $percent = intval($points / $total);
-        $progress = $percent >= 100 ? 'complete' : $percent . '%';
+        if ($percent > 100) {
+            $percent = 100;
+        }
 
-        update_user_meta($user_id, 'ayotte_progress', $progress);
+        update_user_meta($user_id, 'ayotte_progress', $percent);
         update_user_meta($user_id, 'ayotte_progress_updated', current_time('mysql'));
     }
 }

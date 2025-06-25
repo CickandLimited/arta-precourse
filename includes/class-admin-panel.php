@@ -135,7 +135,8 @@ class Ayotte_Admin_Panel {
             if ($changed) {
                 $tracker->recalculate_progress($user->ID);
             }
-            $progress_display = $tracker->get_progress($user->ID) ?: '0%';
+            $progress_val     = intval($tracker->get_progress($user->ID));
+            $progress_display = $progress_val . '%';
 
             echo '<tr>';
             echo '<td>' . esc_html($user->user_email) . '</td>';

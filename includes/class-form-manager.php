@@ -27,7 +27,7 @@ class Ayotte_Form_Manager {
             $status   = get_user_meta($user_id, "ayotte_form_{$form_id}_status", true);
             $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
 
-            if ($status === 'complete' && !$unlocked) {
+            if ($status === 'completed' && !$unlocked) {
                 return $this->render_readonly_submission($form_id, $user_id);
             }
 
@@ -92,7 +92,8 @@ class Ayotte_Form_Manager {
         if ($changed) {
             $tracker->recalculate_progress($user_id);
         }
-        $progress = $tracker->get_progress($user_id) ?: '0%';
+        $progress_val = intval($tracker->get_progress($user_id));
+        $progress = $progress_val . '%';
 
         ob_start();
         echo '<div class="ayotte-dashboard">';
