@@ -142,19 +142,19 @@ class Ayotte_Admin_Panel {
             echo '<td>' . esc_html($user->user_email) . '</td>';
             echo '<td>' . esc_html($progress_display) . '</td>';
             echo '<td><ul class="status-list">' . implode('', $status_items) . '</ul></td>';
-            echo '<td>';
+            echo '<td><ul class="form-checkbox-list">';
             foreach ($form_options as $id => $name) {
                 $checked = in_array($id, $assigned, true) ? 'checked' : '';
-                echo '<label style="margin-right:10px;"><input type="checkbox" name="ayotte_assigned_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '" ' . $checked . '> ' . esc_html($name) . '</label>';
+                echo '<li><label><input type="checkbox" name="ayotte_assigned_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '" ' . $checked . '> ' . esc_html($name) . '</label></li>';
             }
-            echo '</td>';
+            echo '</ul></td>';
 
-            echo '<td>';
+            echo '<td><ul class="form-unlock-list">';
             foreach ($assigned as $id) {
                 $name = $form_options[$id] ?? 'Form ' . $id;
-                echo '<label style="margin-right:10px;"><input type="checkbox" name="ayotte_unlock_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '"> ' . esc_html($name) . '</label>';
+                echo '<li><label><input type="checkbox" name="ayotte_unlock_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '"> ' . esc_html($name) . '</label></li>';
             }
-            echo '</td>';
+            echo '</ul></td>';
 
             echo '</tr>';
         }
