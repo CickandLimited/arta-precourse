@@ -103,28 +103,33 @@ class Ayotte_Progress_Tracker {
             }
         }
 
-        $args = [
-            'search' => [
-                'field' => 'user_id',
-                'value' => $user_id,
-            ],
-            'drafts' => true,
-        ];
-
-        $entries = self::forminator_get_entries($form_id, 0, 1, $args);
+        $email    = get_userdata($user_id)->user_email;
+        // Explicitly specify default pagination to ensure arguments align
+        $entries  = self::forminator_get_entries($form_id, 0, 1);
 
         if (!$entries || empty($entries->entries)) {
-            ayotte_log_message('ERROR', "No entries found for form $form_id and user $user_id");
+            ayotte_log_message('ERROR', "No entries found for form $form_id");
             return 'outstanding';
         }
 
-        $entry = $entries->entries[0];
-
-        if (!empty($entry->draft) || (isset($entry->status) && $entry->status === 'draft')) {
-            return 'draft';
+        foreach ($entries->entries as $e) {
+            if (!isset($e->meta_data) || !is_array($e->meta_data)) {
+                continue;
+            }
+            foreach ($e->meta_data as $meta) {
+                $name  = $meta['name'] ?? ($meta->name ?? '');
+                $value = $meta['value'] ?? ($meta->value ?? '');
+                if ($name === 'hidden-1' && $value === $email) {
+                    $draft_id = $e->draftid ?? ($e->draft_id ?? null);
+                    if ($draft_id === null || $draft_id === 'null' || $draft_id === '') {
+                        return 'completed';
+                    }
+                    return 'draft';
+                }
+            }
         }
 
-        return 'completed';
+        return 'outstanding';
     }
 
     /**
