@@ -23,6 +23,9 @@ class Ayotte_Admin_Panel {
                 <label><input type="checkbox" name="ayotte_debug_enabled" <?php checked($debug_enabled); ?>> Enable debug logging</label>
                 <input type="submit" name="ayotte_debug_submit" class="button button-secondary" value="Save">
             </form>
+            <textarea id="debugCommand" rows="3" style="width:100%;" placeholder="Forminator_API::get_forms();"></textarea>
+            <button id="runCommand" class="button button-secondary" style="margin-top:5px;">Run Command</button>
+            <p id="commandResult"></p>
             <button id="clearLogs">Clear Logs</button>
             <button id="sendTestInvite">Send Test Invite (kris@psss.uk)</button>
             <pre id="logOutput">Loading logs...</pre>
@@ -43,6 +46,20 @@ class Ayotte_Admin_Panel {
 
             document.getElementById('sendTestInvite').onclick = async () => {
                 await fetch(ajaxurl + '?action=ayotte_send_test_invite');
+                fetchLogs();
+            };
+
+            document.getElementById('runCommand').onclick = async () => {
+                const cmd = document.getElementById('debugCommand').value;
+                const res = await fetch(ajaxurl + '?action=ayotte_debug_execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: cmd })
+                });
+                const data = await res.json();
+                document.getElementById('commandResult').textContent = data.success
+                    ? (typeof data.data.result === 'string' ? data.data.result : JSON.stringify(data.data.result, null, 2))
+                    : data.data.message;
                 fetchLogs();
             };
 
@@ -227,6 +244,7 @@ class Ayotte_Admin_Panel {
         add_action('wp_ajax_ayotte_send_test_invite', [$this, 'send_test_invite']);
         add_action('wp_ajax_ayotte_send_invite_email', [$this, 'send_invite_email']);
         add_action('wp_ajax_ayotte_send_bulk_invites', [$this, 'send_bulk_invites']);
+        add_action('wp_ajax_ayotte_debug_execute', [$this, 'debug_execute']);
     }
 
     public function fetch_logs() {
@@ -275,6 +293,39 @@ class Ayotte_Admin_Panel {
             }
         }
         wp_send_json_success(['message' => "Sent $count invitations"]);
+    }
+
+    /**
+     * Execute limited debug commands via AJAX.
+     */
+    public function debug_execute() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Forbidden'], 403);
+        }
+
+        $body    = json_decode(file_get_contents('php://input'), true);
+        $command = trim($body['command'] ?? '');
+
+        if ($command === '') {
+            wp_send_json_error(['message' => 'Empty command']);
+        }
+
+        $pattern = '/^\s*Forminator_API::\w+\s*\(.*\)\s*;?\s*$/s';
+        if (!preg_match($pattern, $command)) {
+            wp_send_json_error(['message' => 'Invalid command']);
+        }
+
+        ayotte_log_message('DEBUG', 'EXECUTE ' . $command);
+
+        try {
+            $result = eval('return ' . rtrim($command, ';') . ';');
+            if (is_array($result) || is_object($result)) {
+                $result = json_encode($result);
+            }
+            wp_send_json_success(['result' => $result]);
+        } catch (Throwable $e) {
+            wp_send_json_error(['message' => $e->getMessage()]);
+        }
     }
 
 }
