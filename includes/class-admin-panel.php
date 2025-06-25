@@ -33,7 +33,7 @@ class Ayotte_Admin_Panel {
                 const data = await res.json();
                 const logs = data.success ? data.data : [];
                 document.getElementById('logOutput').textContent =
-                    logs.map(log => `[${log.time}] [${log.level}] ${log.message}`).join('\n') || 'No logs available.';
+                    logs.slice().reverse().map(log => `[${log.time}] [${log.level}] ${log.message}`).join('\n') || 'No logs available.';
             }
 
             document.getElementById('clearLogs').onclick = async () => {
