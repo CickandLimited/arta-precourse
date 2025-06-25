@@ -99,16 +99,44 @@ class Ayotte_Admin_Panel {
             }
         }
 
+        $tracker = new Ayotte_Progress_Tracker();
+
 
         echo '<div class="wrap ayotte-admin-panel"><h1>Student Progress</h1><form method="post">';
         wp_nonce_field('ayotte_assign_forms');
-        echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Forms</th><th>Unlock</th></tr></thead><tbody>';
+        echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Status</th><th>Forms</th><th>Unlock</th></tr></thead><tbody>';
         foreach ($users as $user) {
-            $progress = get_user_meta($user->ID, 'ayotte_progress', true);
             $assigned = (array) get_user_meta($user->ID, 'ayotte_assigned_forms', true);
+            $points   = 0;
+            $status_items = [];
+            foreach ($assigned as $form_id) {
+                $status = $tracker->get_form_status($form_id, $user->ID);
+                update_user_meta($user->ID, "ayotte_form_{$form_id}_status", $status);
+                $name   = $form_options[$form_id] ?? 'Form ' . $form_id;
+                switch ($status) {
+                    case 'completed':
+                        $label = 'Completed';
+                        $points += 100;
+                        break;
+                    case 'draft':
+                        $label = 'Draft';
+                        $points += 50;
+                        break;
+                    default:
+                        $label = 'Outstanding';
+                        break;
+                }
+                $status_items[] = '<li>' . esc_html($name . ' - ' . $label) . '</li>';
+            }
+
+            $progress = $assigned ? intval($points / count($assigned)) : 0;
+            $progress_display = $progress >= 100 ? 'complete' : $progress . '%';
+            update_user_meta($user->ID, 'ayotte_progress', $progress_display);
+
             echo '<tr>';
             echo '<td>' . esc_html($user->user_email) . '</td>';
-            echo '<td>' . esc_html($progress ?: '0%') . '</td>';
+            echo '<td>' . esc_html($progress_display) . '</td>';
+            echo '<td><ul class="status-list">' . implode('', $status_items) . '</ul></td>';
             echo '<td>';
             foreach ($form_options as $id => $name) {
                 $checked = in_array($id, $assigned, true) ? 'checked' : '';
