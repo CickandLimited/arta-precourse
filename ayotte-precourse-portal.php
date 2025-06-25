@@ -45,6 +45,11 @@ add_action('wp_enqueue_scripts', 'ayotte_precourse_enqueue_frontend');
 // Logging
 if (!function_exists('ayotte_log_message')) {
     function ayotte_log_message($level, $message) {
+        $enabled = get_option('ayotte_debug_enabled', false);
+        if (!$enabled) {
+            return;
+        }
+
         $logs = get_option('ayotte_debug_logs', []);
         $entry = [
             'time' => current_time('mysql'),
@@ -114,6 +119,7 @@ add_action('plugins_loaded', 'ayotte_precourse_init');
 // Rewrite flush
 register_activation_hook(__FILE__, function() {
     (new Ayotte_Precourse())->add_rewrite_rules();
+    add_option('ayotte_debug_enabled', false);
     // Create student dashboard page if it doesn't exist
     if (!get_page_by_path('precourse-forms')) {
         wp_insert_post([

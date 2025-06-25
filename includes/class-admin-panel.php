@@ -2,9 +2,27 @@
 class Ayotte_Admin_Panel {
 
     public function render_debug_console() {
+        if (isset($_POST['ayotte_debug_submit']) && check_admin_referer('ayotte_debug_settings')) {
+            $enabled  = isset($_POST['ayotte_debug_enabled']);
+            $current  = (bool) get_option('ayotte_debug_enabled', false);
+            if ($enabled && !$current) {
+                update_option('ayotte_debug_enabled', true);
+                ayotte_log_message('NOTICE', 'Debug mode enabled');
+            } elseif (!$enabled && $current) {
+                ayotte_log_message('NOTICE', 'Debug mode disabled');
+                update_option('ayotte_debug_enabled', false);
+            }
+        }
+
+        $debug_enabled = (bool) get_option('ayotte_debug_enabled', false);
         ?>
         <div class="wrap ayotte-admin-panel">
             <h1>Debug Console</h1>
+            <form method="post" style="margin-bottom:1em;">
+                <?php wp_nonce_field('ayotte_debug_settings'); ?>
+                <label><input type="checkbox" name="ayotte_debug_enabled" <?php checked($debug_enabled); ?>> Enable debug logging</label>
+                <input type="submit" name="ayotte_debug_submit" class="button button-secondary" value="Save">
+            </form>
             <button id="clearLogs">Clear Logs</button>
             <button id="sendTestInvite">Send Test Invite (kris@psss.uk)</button>
             <pre id="logOutput">Loading logs...</pre>
