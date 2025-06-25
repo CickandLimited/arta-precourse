@@ -79,29 +79,11 @@ class Ayotte_Progress_Tracker {
             return 'outstanding';
         }
 
-        $entry_id = get_user_meta($user_id, "ayotte_form_{$form_id}_entry", true);
-
-        if ($entry_id) {
-            $entry = self::forminator_get_entry($form_id, $entry_id);
-
-            if (!$entry || is_wp_error($entry)) {
-                ayotte_log_message('ERROR', "Entry lookup failed for form $form_id entry $entry_id");
-            } else {
-                if (isset($entry->user_id) && intval($entry->user_id) !== intval($user_id)) {
-                    ayotte_log_message('ERROR', "Entry $entry_id user mismatch: expected $user_id got {$entry->user_id}");
-                }
-
-                if (!empty($entry->draft) || (isset($entry->status) && $entry->status === 'draft')) {
-                    return 'draft';
-                }
-
-                return 'completed';
-            }
-        }
-
         $email    = get_userdata($user_id)->user_email;
 
-        // Explicitly specify default pagination to ensure arguments align
+        // Fetch entries using the wrapper to ensure we get actual entry objects.
+        // Explicitly set pagination defaults to avoid passing search criteria as
+        // the second parameter.
         $entries  = self::forminator_get_entries($form_id, 0, 1);
 
 
