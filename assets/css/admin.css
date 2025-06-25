@@ -20,3 +20,14 @@
     height:300px;
     overflow:auto;
 }
+
+.ayotte-admin-panel ul.form-checkbox-list,
+.ayotte-admin-panel ul.form-unlock-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.ayotte-admin-panel ul.form-checkbox-list li,
+.ayotte-admin-panel ul.form-unlock-list li {
+    margin-bottom: 4px;
+}
