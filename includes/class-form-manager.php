@@ -169,7 +169,11 @@ class Ayotte_Form_Manager {
         }
 
         $email   = wp_get_current_user()->user_email;
-        $entries = Ayotte_Progress_Tracker::forminator_get_entries($form_id);
+
+        // Call Forminator_API::get_entries with explicit pagination defaults
+        // to avoid passing a search array as the second argument
+        $entries = Ayotte_Progress_Tracker::forminator_get_entries($form_id, 0, 1);
+
         $entry   = null;
 
         if ($entries && !empty($entries->entries)) {

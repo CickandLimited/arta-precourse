@@ -100,7 +100,10 @@ class Ayotte_Progress_Tracker {
         }
 
         $email    = get_userdata($user_id)->user_email;
-        $entries  = self::forminator_get_entries($form_id);
+
+        // Explicitly specify default pagination to ensure arguments align
+        $entries  = self::forminator_get_entries($form_id, 0, 1);
+
 
         if (!$entries || empty($entries->entries)) {
             ayotte_log_message('ERROR', "No entries found for form $form_id");
