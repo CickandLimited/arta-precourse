@@ -4,7 +4,14 @@
 }
 .ayotte-admin-panel table.widefat th,
 .ayotte-admin-panel table.widefat td{
-    vertical-align:middle;
+    vertical-align:top;
+}
+.ayotte-admin-panel table.widefat ul.status-list{
+    margin:0;
+    padding-left:1.2em;
+}
+.ayotte-admin-panel table.widefat ul.status-list li{
+    margin:2px 0;
 }
 .ayotte-admin-panel #logOutput{
     background:#f9f9f9;
