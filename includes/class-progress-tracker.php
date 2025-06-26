@@ -113,10 +113,12 @@ class Ayotte_Progress_Tracker {
                 $value = $meta['value'] ?? ($meta->value ?? '');
                 if ($name === 'hidden-1' && $value === $email) {
                     $draft_id = $e->draftid ?? ($e->draft_id ?? null);
-                    if ($draft_id === null || $draft_id === 'null' || $draft_id === '') {
-                        return 'completed';
+                    $status = 'completed';
+                    if (!($draft_id === null || $draft_id === 'null' || $draft_id === '')) {
+                        $status = 'draft';
                     }
-                    return 'draft';
+                    ayotte_log_message('INFO', "Found entry {$e->entry_id} for {$email}; status {$status}");
+                    return $status;
                 }
             }
         }
