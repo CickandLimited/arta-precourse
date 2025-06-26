@@ -14,6 +14,7 @@ class Ayotte_Progress_Tracker {
         $progress = sanitize_text_field($_POST['progress'] ?? '');
         update_user_meta($user_id, 'ayotte_progress', $progress);
         update_user_meta($user_id, 'ayotte_progress_updated', current_time('mysql'));
+        ayotte_log_message('INFO', "Saved progress for user {$user_id}: {$progress}", 'progress tracker');
         wp_send_json_success(['message'=>'progress saved']);
     }
 

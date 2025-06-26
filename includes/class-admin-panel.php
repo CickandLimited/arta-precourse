@@ -322,6 +322,7 @@ class Ayotte_Admin_Panel {
 
     public function send_test_invite() {
         (new Invitation_Manager())->send_invite_email('kris@psss.uk');
+        ayotte_log_message('INFO', 'Test invitation sent to kris@psss.uk', 'admin panel');
         wp_send_json_success(['message' => 'Invite sent']);
     }
 
@@ -331,7 +332,10 @@ class Ayotte_Admin_Panel {
     if (!$email) {
         wp_send_json_error(['message' => 'Invalid email']);
     } else {
-        (new Invitation_Manager())->send_invite_email($email);
+        $result = (new Invitation_Manager())->send_invite_email($email);
+        if ($result) {
+            ayotte_log_message('INFO', "Invitation sent to {$email}", 'admin panel');
+        }
         wp_send_json_success(['message' => "Invitation sent to $email"]);
     }
 }
@@ -350,6 +354,7 @@ class Ayotte_Admin_Panel {
                 $count++;
             }
         }
+        ayotte_log_message('INFO', "Sent {$count} invitations", 'admin panel');
         wp_send_json_success(['message' => "Sent $count invitations"]);
     }
 

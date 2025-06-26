@@ -20,6 +20,7 @@ class Invitation_Manager {
     public function create_customer_user($email) {
         $user = get_user_by('email', $email);
         if ($user) {
+            ayotte_log_message('INFO', "Using existing account for {$email}", 'email invitation manager');
             return [$user->ID, null];
         }
 
@@ -35,6 +36,7 @@ class Invitation_Manager {
         if ($user) {
             $user->set_role('customer');
         }
+        ayotte_log_message('INFO', "Created user {$user_id} for {$email}", 'email invitation manager');
 
         return [$user_id, $password];
     }
