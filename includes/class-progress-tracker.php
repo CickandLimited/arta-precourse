@@ -72,7 +72,7 @@ class Ayotte_Progress_Tracker {
         );
 
         $message = "$method\nparams=\n{$params}\nresult=\n{$result}";
-        ayotte_log_message('DEBUG', $message);
+        ayotte_log_message('DEBUG', $message, 'progress tracker');
 
     }
 
@@ -100,7 +100,7 @@ class Ayotte_Progress_Tracker {
 
         if (!$entries_list) {
             $type = is_object($entries) ? 'object' : gettype($entries);
-            ayotte_log_message('ERROR', "No entries found for form $form_id (response type: $type)");
+            ayotte_log_message('ERROR', "No entries found for form $form_id (response type: $type)", 'progress tracker');
             return 'outstanding';
         }
 
@@ -117,7 +117,7 @@ class Ayotte_Progress_Tracker {
                     if (!($draft_id === null || $draft_id === 'null' || $draft_id === '')) {
                         $status = 'draft';
                     }
-                    ayotte_log_message('INFO', "Found entry {$e->entry_id} for {$email}; status {$status}");
+                    ayotte_log_message('INFO', "Found entry {$e->entry_id} for {$email}; status {$status}", 'progress tracker');
                     return $status;
                 }
             }
@@ -157,9 +157,9 @@ class Ayotte_Progress_Tracker {
 
         if ($entry_id) {
             update_user_meta($user_id, "ayotte_form_{$form_id}_entry", $entry_id);
-            ayotte_log_message('INFO', "Recorded entry $entry_id for form $form_id user $user_id");
+            ayotte_log_message('INFO', "Recorded entry $entry_id for form $form_id user $user_id", 'progress tracker');
         } else {
-            ayotte_log_message('ERROR', "Missing entry ID for form $form_id submission by user $user_id");
+            ayotte_log_message('ERROR', "Missing entry ID for form $form_id submission by user $user_id", 'progress tracker');
         }
 
         update_user_meta($user_id, "ayotte_form_{$form_id}_status", 'completed');
@@ -178,7 +178,7 @@ class Ayotte_Progress_Tracker {
         if ($total === 0) {
             update_user_meta($user_id, 'ayotte_progress', 0);
             if (get_option('ayotte_debug_enabled', false)) {
-                ayotte_log_message('DEBUG', "Recalculated progress user {$user_id}: forms=[] percent=0");
+                ayotte_log_message('DEBUG', "Recalculated progress user {$user_id}: forms=[] percent=0", 'progress tracker');
             }
             return;
         }
@@ -204,7 +204,7 @@ class Ayotte_Progress_Tracker {
 
         if (get_option('ayotte_debug_enabled', false)) {
             $forms = implode(',', $assigned);
-            ayotte_log_message('DEBUG', "Recalculated progress user {$user_id}: forms=[{$forms}] percent={$percent}");
+            ayotte_log_message('DEBUG', "Recalculated progress user {$user_id}: forms=[{$forms}] percent={$percent}", 'progress tracker');
         }
     }
 }

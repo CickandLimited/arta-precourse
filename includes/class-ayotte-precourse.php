@@ -58,7 +58,7 @@ class Ayotte_Precourse {
     public function add_rewrite_rules() {
         add_rewrite_rule('^precourse-invite/?(.*)', 'index.php?precourse_invite=1', 'top');
         add_rewrite_tag('%precourse_invite%', '1');
-        ayotte_log_message('INFO', 'Rewrite rules added');
+        ayotte_log_message('INFO', 'Rewrite rules added', 'admin panel');
     }
 
     public function handle_token_redirect() {
@@ -70,13 +70,13 @@ class Ayotte_Precourse {
                 if (!session_id()) session_start();
                 $_SESSION['ayotte_precourse_email'] = $email;
                 $_SESSION['ayotte_precourse_token'] = $token;
-                ayotte_log_message('INFO', "Token valid for email: $email");
+                ayotte_log_message('INFO', "Token valid for email: $email", 'email invitation manager');
                 $reg_url = wp_registration_url();
                 $query   = '?email=' . urlencode($email) . '&token=' . urlencode($token);
                 wp_redirect($reg_url . $query);
                 exit;
             } else {
-                ayotte_log_message('ERROR', "Invalid or expired token: $token");
+                ayotte_log_message('ERROR', "Invalid or expired token: $token", 'email invitation manager');
                 wp_redirect(site_url('/error-page?reason=invalid-token'));
                 exit;
             }
@@ -99,7 +99,7 @@ class Ayotte_Precourse {
         if ($token && $email) {
             update_user_meta($user_id, 'ayotte_precourse_email', $email);
             update_user_meta($user_id, 'ayotte_precourse_token', $token);
-            ayotte_log_message('INFO', "Linked token $token to user $user_id");
+            ayotte_log_message('INFO', "Linked token $token to user $user_id", 'email invitation manager');
             unset($_SESSION['ayotte_precourse_email'], $_SESSION['ayotte_precourse_token']);
         }
     }
