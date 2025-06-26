@@ -61,9 +61,17 @@ class Ayotte_Progress_Tracker {
             return;
         }
 
-        $params  = substr(json_encode($args), 0, 200);
-        $result  = substr(json_encode($response), 0, 200);
-        ayotte_log_message('DEBUG', "$method params={$params} result={$result}");
+        $params = json_encode(
+            $args,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
+        );
+        $result = json_encode(
+            $response,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
+        );
+
+        $message = "$method\nparams=\n{$params}\nresult=\n{$result}";
+        ayotte_log_message('DEBUG', $message);
     }
 
     /**
