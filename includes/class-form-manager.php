@@ -233,6 +233,7 @@ class Ayotte_Form_Manager {
                 update_user_meta($user_id, 'ayotte_id_file', $uploaded['url']);
             }
         }
+        ayotte_log_message('INFO', "Precourse form saved for user {$user_id}", 'form manager');
         wp_send_json_success(['message' => 'Saved']);
     }
 }
