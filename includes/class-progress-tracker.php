@@ -61,8 +61,8 @@ class Ayotte_Progress_Tracker {
             return;
         }
 
-        $params  = substr(json_encode($args), 0, 200);
-        $result  = substr(json_encode($response), 0, 200);
+        $params  = json_encode($args);
+        $result  = json_encode($response);
         ayotte_log_message('DEBUG', "$method params={$params} result={$result}");
     }
 
