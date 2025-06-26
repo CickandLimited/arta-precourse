@@ -61,6 +61,7 @@ class Ayotte_Progress_Tracker {
             return;
         }
 
+
         $params = json_encode(
             $args,
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
@@ -72,6 +73,7 @@ class Ayotte_Progress_Tracker {
 
         $message = "$method\nparams=\n{$params}\nresult=\n{$result}";
         ayotte_log_message('DEBUG', $message);
+
     }
 
     /**
