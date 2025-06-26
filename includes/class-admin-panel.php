@@ -28,11 +28,56 @@ class Ayotte_Admin_Panel {
             <p id="commandResult"></p>
             <button id="clearLogs">Clear Logs</button>
             <button id="sendTestInvite">Send Test Invite (kris@psss.uk)</button>
+            <div style="margin:10px 0;">
+                <label>
+                    Level
+                    <select id="logLevel">
+                        <option value="">All</option>
+                        <option value="DEBUG">DEBUG</option>
+                        <option value="INFO">INFO</option>
+                        <option value="NOTICE">NOTICE</option>
+                        <option value="ERROR">ERROR</option>
+                    </select>
+                </label>
+                <label style="margin-left:10px;">
+                    Module
+                    <select id="logModule">
+                        <option value="">All</option>
+                        <?php
+                        $logs    = get_option('ayotte_debug_logs', []);
+                        $modules = [];
+                        foreach ((is_array($logs) ? $logs : []) as $entry) {
+                            if (!empty($entry['module']) && !in_array($entry['module'], $modules, true)) {
+                                $modules[] = $entry['module'];
+                            }
+                        }
+                        sort($modules);
+                        foreach ($modules as $m) {
+                            echo '<option value="' . esc_attr($m) . '">' . esc_html($m) . '</option>';
+                        }
+                        ?>
+                    </select>
+                </label>
+            </div>
             <pre id="logOutput">Loading logs...</pre>
         </div>
         <script>
+            const levelSel  = document.getElementById('logLevel');
+            const moduleSel = document.getElementById('logModule');
+
+            levelSel.value  = localStorage.getItem('ayotte_log_level')  || '';
+            moduleSel.value = localStorage.getItem('ayotte_log_module') || '';
+
+            levelSel.onchange = moduleSel.onchange = () => {
+                localStorage.setItem('ayotte_log_level', levelSel.value);
+                localStorage.setItem('ayotte_log_module', moduleSel.value);
+                fetchLogs();
+            };
+
             async function fetchLogs() {
-                const res = await fetch(ajaxurl + '?action=ayotte_fetch_logs');
+                const level  = encodeURIComponent(levelSel.value);
+                const module = encodeURIComponent(moduleSel.value);
+                const res = await fetch(ajaxurl + '?action=ayotte_fetch_logs&level=' + level + '&module=' + module);
                 const data = await res.json();
                 const logs = data.success ? data.data : [];
                 document.getElementById('logOutput').textContent =
@@ -248,14 +293,26 @@ class Ayotte_Admin_Panel {
     }
 
     public function fetch_logs() {
+        $level  = isset($_GET['level']) ? strtoupper(sanitize_text_field($_GET['level'])) : '';
+        $module = isset($_GET['module']) ? sanitize_text_field($_GET['module']) : '';
+
         $logs = get_option('ayotte_debug_logs', []);
+        $logs = is_array($logs) ? $logs : [];
+
+        if ($level !== '') {
+            $logs = array_filter($logs, fn($log) => ($log['level'] ?? '') === $level);
+        }
+        if ($module !== '') {
+            $logs = array_filter($logs, fn($log) => ($log['module'] ?? '') === $module);
+        }
+
         $formatted = array_map(fn($log) => [
             'time' => $log['time'] ?? '',
             'level' => $log['level'] ?? '',
             'message' => $log['message'] ?? '',
             'module' => $log['module'] ?? '',
-        ], is_array($logs) ? $logs : []);
-        wp_send_json_success($formatted);
+        ], $logs);
+        wp_send_json_success(array_values($formatted));
     }
 
     public function clear_logs() {
