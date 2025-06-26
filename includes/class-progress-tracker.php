@@ -94,15 +94,17 @@ class Ayotte_Progress_Tracker {
         // Fetch entries using the wrapper to ensure we get actual entry objects.
         // Explicitly set pagination defaults to avoid passing search criteria as
         // the second parameter.
-        $entries  = self::forminator_get_entries($form_id, 0, 1);
+        $entries = self::forminator_get_entries($form_id, 0, 1);
 
+        $entries_list = is_array($entries) ? $entries : ($entries->entries ?? []);
 
-        if (!$entries || empty($entries->entries)) {
-            ayotte_log_message('ERROR', "No entries found for form $form_id");
+        if (!$entries_list) {
+            $type = is_object($entries) ? 'object' : gettype($entries);
+            ayotte_log_message('ERROR', "No entries found for form $form_id (response type: $type)");
             return 'outstanding';
         }
 
-        foreach ($entries->entries as $e) {
+        foreach ($entries_list as $e) {
             if (!isset($e->meta_data) || !is_array($e->meta_data)) {
                 continue;
             }
