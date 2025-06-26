@@ -182,10 +182,9 @@ class Ayotte_Form_Manager {
                 if (!isset($e->meta_data) || !is_array($e->meta_data)) {
                     continue;
                 }
-                foreach ($e->meta_data as $meta) {
-                    $name  = $meta['name'] ?? ($meta->name ?? '');
+                foreach ($e->meta_data as $field => $meta) {
                     $value = $meta['value'] ?? ($meta->value ?? '');
-                    if ($name === 'hidden-1' && $value === $email) {
+                    if ($field === 'hidden-1' && $value === $email) {
                         $entry = $e;
                         break 2;
                     }
@@ -199,10 +198,9 @@ class Ayotte_Form_Manager {
 
         $fields = [];
         if (isset($entry->meta_data) && is_array($entry->meta_data)) {
-            foreach ($entry->meta_data as $meta) {
-                $label = $meta['name'] ?? ($meta->name ?? '');
+            foreach ($entry->meta_data as $field => $meta) {
                 $value = $meta['value'] ?? ($meta->value ?? '');
-                $fields[$label] = $value;
+                $fields[$field] = $value;
             }
         }
 
