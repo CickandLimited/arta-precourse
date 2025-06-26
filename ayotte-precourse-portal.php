@@ -44,7 +44,7 @@ add_action('wp_enqueue_scripts', 'ayotte_precourse_enqueue_frontend');
 
 // Logging
 if (!function_exists('ayotte_log_message')) {
-    function ayotte_log_message($level, $message) {
+    function ayotte_log_message($level, $message, $module = '') {
         $enabled = get_option('ayotte_debug_enabled', false);
         if (!$enabled) {
             return;
@@ -54,7 +54,8 @@ if (!function_exists('ayotte_log_message')) {
         $entry = [
             'time' => current_time('mysql'),
             'level' => strtoupper($level),
-            'message' => $message
+            'message' => $message,
+            'module' => $module
         ];
         $logs[] = $entry;
         if (count($logs) > 1000) array_shift($logs);

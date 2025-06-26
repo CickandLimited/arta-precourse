@@ -7,9 +7,9 @@ class Ayotte_Admin_Panel {
             $current  = (bool) get_option('ayotte_debug_enabled', false);
             if ($enabled && !$current) {
                 update_option('ayotte_debug_enabled', true);
-                ayotte_log_message('NOTICE', 'Debug mode enabled');
+                ayotte_log_message('NOTICE', 'Debug mode enabled', 'admin panel');
             } elseif (!$enabled && $current) {
-                ayotte_log_message('NOTICE', 'Debug mode disabled');
+                ayotte_log_message('NOTICE', 'Debug mode disabled', 'admin panel');
                 update_option('ayotte_debug_enabled', false);
             }
         }
@@ -253,6 +253,7 @@ class Ayotte_Admin_Panel {
             'time' => $log['time'] ?? '',
             'level' => $log['level'] ?? '',
             'message' => $log['message'] ?? '',
+            'module' => $log['module'] ?? '',
         ], is_array($logs) ? $logs : []);
         wp_send_json_success($formatted);
     }
@@ -315,7 +316,7 @@ class Ayotte_Admin_Panel {
             wp_send_json_error(['message' => 'Invalid command']);
         }
 
-        ayotte_log_message('DEBUG', 'EXECUTE ' . $command);
+        ayotte_log_message('DEBUG', 'EXECUTE ' . $command, 'admin panel');
 
         try {
             $result = eval('return ' . rtrim($command, ';') . ';');

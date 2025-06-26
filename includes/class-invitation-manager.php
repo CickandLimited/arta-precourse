@@ -5,7 +5,7 @@ class Invitation_Manager {
         $token = bin2hex(random_bytes(16));
         $expiry = time() + WEEK_IN_SECONDS;
         add_option("ayotte_invite_{$token}", ['email' => $email, 'expires' => $expiry]);
-        ayotte_log_message('INFO', "Generated token for $email");
+        ayotte_log_message('INFO', "Generated token for $email", 'email invitation manager');
         return $token;
     }
 
@@ -27,7 +27,7 @@ class Invitation_Manager {
         $user_id = wp_create_user($email, $password, $email);
 
         if (is_wp_error($user_id)) {
-            ayotte_log_message('ERROR', 'Failed to create user ' . $email . ': ' . $user_id->get_error_message());
+            ayotte_log_message('ERROR', 'Failed to create user ' . $email . ': ' . $user_id->get_error_message(), 'email invitation manager');
             return [0, null];
         }
 
@@ -41,20 +41,20 @@ class Invitation_Manager {
 
     public function send_invite_email($email) {
         if (!is_email($email)) {
-            ayotte_log_message('ERROR', "Invalid email: $email");
+            ayotte_log_message('ERROR', "Invalid email: $email", 'email invitation manager');
             return false;
         }
 
         list($user_id, $password) = $this->create_customer_user($email);
 
         if (!$user_id || !$password) {
-            ayotte_log_message('ERROR', "Failed to create account for $email");
+            ayotte_log_message('ERROR', "Failed to create account for $email", 'email invitation manager');
             return false;
         }
 
         $sender = new Ayotte_Email_Sender();
         $sent = $sender->send_credentials($email, $password);
-        ayotte_log_message($sent ? 'INFO' : 'ERROR', ($sent ? 'Sent' : 'Failed to send') . " credentials to $email");
+        ayotte_log_message($sent ? 'INFO' : 'ERROR', ($sent ? 'Sent' : 'Failed to send') . " credentials to $email", 'email invitation manager');
         return $sent;
     }
 }

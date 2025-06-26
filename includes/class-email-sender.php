@@ -3,7 +3,7 @@ class Ayotte_Email_Sender {
 
     public function send_email($to, $subject, $message, $headers = [], $attachments = []) {
         $sent = wp_mail($to, $subject, $message, $headers, $attachments);
-        ayotte_log_message($sent ? 'INFO' : 'ERROR', ($sent ? 'Email sent' : 'Failed email') . " to $to");
+        ayotte_log_message($sent ? 'INFO' : 'ERROR', ($sent ? 'Email sent' : 'Failed email') . " to $to", 'email invitation manager');
         return $sent;
     }
 
