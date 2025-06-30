@@ -66,51 +66,13 @@ if (!function_exists('ayotte_log_message')) {
     }
 }
 
-/**
- * Display an admin notice when Forminator is missing.
- */
-function ayotte_forminator_missing_notice() {
-    if (!current_user_can('manage_options')) {
-        return;
-    }
-    $link = admin_url('plugin-install.php?tab=plugin-information&plugin=forminator');
-    echo '<div class="notice notice-error"><p>';
-    echo 'Ayotte Precourse Portal requires the <a href="' . esc_url($link) . '">Forminator</a> plugin.';
-    echo '</p></div>';
-}
-
-/**
- * Add a submenu linking to the Forminator builder.
- */
-function ayotte_add_forminator_submenu() {
-    add_submenu_page(
-        'ayotte-precourse',
-        'Forminator Forms',
-        'Forminator Forms',
-        'manage_options',
-        'ayotte-forminator',
-        function () {
-            wp_redirect(admin_url('admin.php?page=forminator-cform'));
-            exit;
-        }
-    );
-}
 
 // Plugin Initialization with verbose logging restored
 /**
- * Initialize plugin and ensure Forminator is available.
+ * Initialize the plugin.
  */
 function ayotte_precourse_init() {
     ayotte_log_message('INFO', 'Ayotte Precourse Portal plugin initializing...');
-
-    if (!class_exists('Forminator')) {
-        ayotte_log_message('ERROR', 'Forminator plugin not detected');
-        add_action('admin_notices', 'ayotte_forminator_missing_notice');
-        return;
-    }
-
-    // Register the Forminator submenu after the main menu is created.
-    add_action('admin_menu', 'ayotte_add_forminator_submenu', 20);
 
     $plugin = new Ayotte_Precourse();
     $plugin->run();
