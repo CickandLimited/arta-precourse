@@ -122,6 +122,7 @@ class Ayotte_Form_Manager {
 
                 $submitted     = in_array($status, ['completed', 'locked'], true);
                 $locked        = ($status === 'locked') && !$unlocked;
+                $request       = get_user_meta($user_id, "ayotte_form_{$form_id}_unlock_request", true);
                 $status_class  = $status;
                 if ($unlocked) {
                     $status_label = 'Unlocked for editing';
@@ -145,6 +146,11 @@ class Ayotte_Form_Manager {
 
                     if ($locked) {
                         $action = '<a class="button" href="' . $url . '">View</a>';
+                        if (!$request) {
+                            $action .= ' <button type="button" class="button ayotte-request-unlock" data-form="' . esc_attr($form_id) . '">Request Unlock</button>';
+                        } else {
+                            $action .= ' <span class="unlock-requested">Request Sent</span>';
+                        }
                     } else {
                         if ($submitted) {
                             $text = 'View';
@@ -166,6 +172,29 @@ class Ayotte_Form_Manager {
             echo '</tbody></table>';
         }
         echo '</div>';
+        ?>
+        <script>
+        document.querySelectorAll('.ayotte-request-unlock').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const reason = prompt('Please provide a reason for unlocking this form:');
+                if (!reason) return;
+                btn.disabled = true;
+                const res = await fetch(ajaxurl + '?action=ayotte_request_unlock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ form_id: btn.dataset.form, reason })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    btn.textContent = 'Requested';
+                } else {
+                    alert(data.data.message || 'Error');
+                    btn.disabled = false;
+                }
+            });
+        });
+        </script>
+        <?php
 
         return ob_get_clean();
     }

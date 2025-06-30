@@ -35,6 +35,18 @@
     margin-bottom: 4px;
 }
 
+.ayotte-admin-panel tr.unlock-request {
+    background: #fff9c4;
+}
+.ayotte-admin-panel li.unlock-request {
+    background: #fff9c4;
+    padding: 2px;
+}
+.ayotte-admin-panel .unlock-requested {
+    font-style: italic;
+    margin-left: 4px;
+}
+
 .ayotte-admin-panel td.progress-cell { text-align: left; }
 
 .ayotte-progress-bar {
