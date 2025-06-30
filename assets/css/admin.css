@@ -51,3 +51,5 @@
 .ayotte-progress-fill.outstanding { background: #a32c2e; }
 .ayotte-progress-fill.draft       { background: #e67e22; }
 .ayotte-progress-fill.completed   { background: #2ecc71; }
+
+.ayotte-static-editor{width:100%;max-width:500px;}

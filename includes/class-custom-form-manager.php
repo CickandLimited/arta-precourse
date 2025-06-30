@@ -111,7 +111,8 @@ class Custom_Form_Manager {
             foreach ($labels as $idx => $label) {
                 $label = sanitize_text_field($label);
                 $type  = sanitize_text_field($types[$idx] ?? 'text');
-                $text  = sanitize_text_field($texts[$idx] ?? '');
+                $raw_text = $texts[$idx] ?? '';
+                $text  = ($type === 'static') ? wp_kses_post($raw_text) : sanitize_text_field($raw_text);
                 $req   = in_array($idx, $required) ? 1 : 0;
                 $db->query(
                     "INSERT INTO custom_form_fields (form_id,label,type,options,required) VALUES (".
@@ -120,6 +121,7 @@ class Custom_Form_Manager {
             }
             echo '<div class="updated"><p>Form saved.</p></div>';
         }
+        wp_enqueue_editor();
 
         ?>
         <div class="wrap">
@@ -152,7 +154,24 @@ class Custom_Form_Manager {
                                     } ?>
                                 </select>
                             </td>
-                            <td><input type="text" name="field_text[]" value="<?php echo esc_attr($f['options']); ?>"></td>
+                            <td>
+                                <?php
+                                if ($f['type'] === 'static') {
+                                    wp_editor(
+                                        $f['options'],
+                                        'field_text_' . $idx,
+                                        [
+                                            'textarea_name' => 'field_text[]',
+                                            'textarea_rows' => 4,
+                                            'media_buttons' => false,
+                                            'teeny'         => true,
+                                        ]
+                                    );
+                                } else {
+                                    echo '<input type="text" name="field_text[]" value="' . esc_attr($f['options']) . '">';
+                                }
+                                ?>
+                            </td>
                             <td><input type="checkbox" name="field_required[]" value="<?php echo $idx; ?>" <?php checked($f['required'],1); ?>></td>
                             <td><button type="button" class="remove button">Remove</button></td>
                         </tr>
@@ -180,16 +199,32 @@ class Custom_Form_Manager {
                     `<option value="radio">Radio</option>`+
                     `<option value="pagebreak">Page Break</option>`+
                     `</select></td>`+
-                    `<td><input type="text" name="field_text[]"></td>`+
+                    `<td class="options-cell"><input type="text" name="field_text[]"></td>`+
                     `<td><input type="checkbox" name="field_required[]" value=""></td>`+
                     `<td><button type="button" class="remove button">Remove</button></td>`;
                 table.appendChild(row);
                 updateIndexes();
             };
-            table.addEventListener('click', e=>{
-                if(e.target.classList.contains('remove')){
-                    e.target.closest('tr').remove();
-                    updateIndexes();
+            function handleTypeChange(sel){
+                const cell = sel.closest('tr').querySelector('.options-cell');
+                if(sel.value === 'static'){
+                    cell.innerHTML = '<textarea class="ayotte-static-editor" name="field_text[]"></textarea>';
+                    if(window.wp && wp.editor){
+                        wp.editor.initialize(cell.querySelector('textarea'));
+                    }
+                }else{
+                    cell.innerHTML = '<input type="text" name="field_text[]">';
+                }
+            }
+           table.addEventListener('click', e=>{
+               if(e.target.classList.contains('remove')){
+                   e.target.closest('tr').remove();
+                   updateIndexes();
+               }
+           });
+            table.addEventListener('change', e=>{
+                if(e.target.name === 'field_type[]'){
+                    handleTypeChange(e.target);
                 }
             });
             function updateIndexes(){
@@ -277,7 +312,7 @@ class Custom_Form_Manager {
                                 case 'date':
                                     echo '<input type="date" name="'.$name.'" value="'.esc_attr($val).'">'; break;
                                 case 'static':
-                                    echo '<span>'.esc_html($f['options']).'</span>'; break;
+                                    echo '<span>'.wp_kses_post($f['options']).'</span>'; break;
                                 case 'file':
                                     echo '<input type="file" name="'.$name.'">';
                                     if (!empty($val)) echo '<br><em>Current: <a href="'.esc_url($val).'" target="_blank">View</a></em>';
