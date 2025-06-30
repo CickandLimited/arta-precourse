@@ -218,10 +218,21 @@ class Ayotte_Admin_Panel {
                 }
                 $progress_class = ($percent === 100) ? 'completed'
                                  : (($percent >= 50) ? 'draft' : 'outstanding');
-                $status_items[] = '<li>' . esc_html($name . ' - ' . $label)
+
+                $item  = '<li>' . esc_html($name . ' - ' . $label)
                     . '<div class="ayotte-progress-bar"><div class="ayotte-progress-fill '
-                    . $progress_class . '" style="width:' . $percent . '%"></div></div>'
-                    . '</li>';
+                    . $progress_class . '" style="width:' . $percent . '%"></div></div>';
+
+                if (in_array($status, ['completed', 'locked'], true)) {
+                    $view_url = esc_url(add_query_arg([
+                        'form_id' => $form_id,
+                        'user_id' => $user->ID,
+                    ], site_url('/precourse-form')));
+                    $item .= ' <a href="' . $view_url . '">View</a>';
+                }
+
+                $item .= '</li>';
+                $status_items[] = $item;
             }
 
             if ($changed) {
