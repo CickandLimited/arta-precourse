@@ -119,7 +119,7 @@ class Ayotte_Form_Manager {
                 $locked    = ($status === 'locked') && !$unlocked;
                 switch ($status) {
                     case 'locked':
-                        $status_label = 'Locked';
+                        $status_label = 'Completed (Locked)';
                         break;
                     case 'completed':
                         $status_label = 'Completed';
