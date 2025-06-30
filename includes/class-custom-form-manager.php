@@ -1,6 +1,7 @@
 <?php
 class Custom_Form_Manager {
     public function init() {
+        Custom_DB::get_instance()->ensure_schema();
         add_action('admin_menu', [$this, 'add_menu']);
         add_shortcode('ayotte_custom_form', [$this, 'render_form_shortcode']);
         add_action('wp_ajax_ayotte_custom_form_submit', [$this, 'handle_submission']);

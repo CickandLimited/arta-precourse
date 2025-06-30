@@ -40,6 +40,49 @@ class Custom_DB {
     }
 
     /**
+     * Ensure required tables exist and create them if missing.
+     */
+    public function ensure_schema() {
+        $conn = $this->connection instanceof mysqli ? $this->connection : $this->connect();
+        if ($conn instanceof WP_Error) {
+            return;
+        }
+
+        $tables = [
+            'custom_forms' => "CREATE TABLE custom_forms (\n              id INT AUTO_INCREMENT PRIMARY KEY,\n              name VARCHAR(255) NOT NULL\n            )",
+            'custom_form_fields' => "CREATE TABLE custom_form_fields (\n              id INT AUTO_INCREMENT PRIMARY KEY,\n              form_id INT NOT NULL,\n              label VARCHAR(255),\n              type VARCHAR(50),\n              options TEXT,\n              required TINYINT(1) DEFAULT 0\n            )",
+            'custom_form_submissions' => "CREATE TABLE custom_form_submissions (\n              id INT AUTO_INCREMENT PRIMARY KEY,\n              form_id INT NOT NULL,\n              submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n              data LONGTEXT\n            )"
+        ];
+
+        foreach ($tables as $name => $sql) {
+            $check = $conn->query("SHOW TABLES LIKE '$name'");
+            if (!$check || $check->num_rows === 0) {
+                $conn->query($sql);
+            }
+        }
+
+        // Optional column checks
+        $columns = [
+            'custom_form_fields' => [
+                'options'  => "ALTER TABLE custom_form_fields ADD COLUMN options TEXT",
+                'required' => "ALTER TABLE custom_form_fields ADD COLUMN required TINYINT(1) DEFAULT 0"
+            ],
+            'custom_form_submissions' => [
+                'data' => "ALTER TABLE custom_form_submissions ADD COLUMN data LONGTEXT"
+            ]
+        ];
+
+        foreach ($columns as $table => $cols) {
+            foreach ($cols as $column => $alter) {
+                $res = $conn->query("SHOW COLUMNS FROM $table LIKE '$column'");
+                if ($res && $res->num_rows === 0) {
+                    $conn->query($alter);
+                }
+            }
+        }
+    }
+
+    /**
      * Return an existing connection if available.
      */
     public function get_connection() {
