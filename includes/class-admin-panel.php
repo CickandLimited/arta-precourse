@@ -6,6 +6,7 @@ class Ayotte_Admin_Panel {
      */
     public function render_settings_page() {
         $this->render_debug_console();
+        $this->render_unlock_email_settings();
         (new Ayotte_Form_DB_Settings())->render_page();
     }
 
@@ -196,6 +197,7 @@ class Ayotte_Admin_Panel {
             $status_items    = [];
             $form_status_map = [];
             $changed         = false;
+            $row_request     = false;
 
             foreach ($assigned as $form_id) {
                 $status = $tracker->get_form_status($form_id, $user->ID);
@@ -206,6 +208,10 @@ class Ayotte_Admin_Panel {
                     $changed = true;
                 }
                 $name   = $form_options[$form_id] ?? Ayotte_Progress_Tracker::get_form_name($form_id);
+                $reason = get_user_meta($user->ID, "ayotte_form_{$form_id}_unlock_request", true);
+                if ($reason) {
+                    $row_request = true;
+                }
                 switch ($status) {
                     case 'locked':
                         $label   = 'Completed (Locked)';
@@ -251,7 +257,7 @@ class Ayotte_Admin_Panel {
             $progress_class   = ($progress_val == 100) ? 'completed'
                                 : (($progress_val >= 50) ? 'draft' : 'outstanding');
 
-            echo '<tr>';
+            echo '<tr' . ($row_request ? ' class="unlock-request"' : '') . '>';
             echo '<td>' . esc_html($user->user_email) . '</td>';
             echo '<td class="progress-cell">'
                  . esc_html($progress_display)
@@ -268,9 +274,14 @@ class Ayotte_Admin_Panel {
             $buttons = '';
             foreach ($assigned as $id) {
                 if (($form_status_map[$id] ?? '') === 'locked') {
-                    $name = $form_options[$id] ?? Ayotte_Progress_Tracker::get_form_name($id);
-                    $buttons .= '<li>' . esc_html($name) .
-                        ' <button type="button" class="ayotte-unlock-btn" data-user="' . intval($user->ID) . '" data-form="' . esc_attr($id) . '">Unlock</button> '
+                    $name   = $form_options[$id] ?? Ayotte_Progress_Tracker::get_form_name($id);
+                    $reason = get_user_meta($user->ID, "ayotte_form_{$id}_unlock_request", true);
+                    $li_cls = $reason ? ' class="unlock-request"' : '';
+                    $buttons .= '<li' . $li_cls . '>' . esc_html($name);
+                    if ($reason) {
+                        $buttons .= ' <em>' . esc_html($reason) . '</em>';
+                    }
+                    $buttons .= ' <button type="button" class="ayotte-unlock-btn" data-user="' . intval($user->ID) . '" data-form="' . esc_attr($id) . '">Unlock</button> '
                         . '<span class="unlock-msg"></span></li>';
                 }
             }
@@ -301,6 +312,32 @@ class Ayotte_Admin_Panel {
             });
         });
         </script>
+        <?php
+    }
+
+    /**
+     * Render settings for unlock notification emails.
+     */
+    public function render_unlock_email_settings() {
+        if (!empty($_POST['ayotte_unlock_emails_nonce']) && check_admin_referer('ayotte_unlock_emails', 'ayotte_unlock_emails_nonce')) {
+            $emails = sanitize_text_field($_POST['ayotte_unlock_emails'] ?? '');
+            update_option('ayotte_unlock_emails', $emails);
+            echo '<div class="updated"><p>Settings saved.</p></div>';
+        }
+
+        $emails = esc_attr(get_option('ayotte_unlock_emails', ''));
+        ?>
+        <div class="wrap ayotte-admin-panel">
+            <h1>Unlock Request Emails</h1>
+            <form method="post">
+                <?php wp_nonce_field('ayotte_unlock_emails', 'ayotte_unlock_emails_nonce'); ?>
+                <p>
+                    <label for="ayotte_unlock_emails">Notification Addresses (comma separated)</label><br>
+                    <input type="text" id="ayotte_unlock_emails" name="ayotte_unlock_emails" value="<?php echo $emails; ?>" class="regular-text" style="width:400px;" />
+                </p>
+                <p class="submit"><input type="submit" class="button button-primary" value="Save Changes"></p>
+            </form>
+        </div>
         <?php
     }
 
@@ -340,6 +377,7 @@ class Ayotte_Admin_Panel {
         add_action('wp_ajax_ayotte_send_invite_email', [$this, 'send_invite_email']);
         add_action('wp_ajax_ayotte_send_bulk_invites', [$this, 'send_bulk_invites']);
         add_action('wp_ajax_ayotte_unlock_form', [$this, 'unlock_form']);
+        add_action('wp_ajax_ayotte_request_unlock', [$this, 'request_unlock']);
         add_action('wp_ajax_ayotte_debug_execute', [$this, 'debug_execute']);
     }
 
@@ -410,6 +448,40 @@ class Ayotte_Admin_Panel {
     }
 
     /**
+     * Handle unlock requests from students.
+     */
+    public function request_unlock() {
+        if (!is_user_logged_in()) {
+            wp_send_json_error(['message' => 'Forbidden'], 403);
+        }
+
+        $body    = json_decode(file_get_contents('php://input'), true);
+        $form_id = intval($body['form_id'] ?? 0);
+        $reason  = sanitize_text_field($body['reason'] ?? '');
+        $user_id = get_current_user_id();
+
+        if (!$form_id || $reason === '') {
+            wp_send_json_error(['message' => 'Invalid parameters']);
+        }
+
+        update_user_meta($user_id, "ayotte_form_{$form_id}_unlock_request", $reason);
+
+        $emails = array_filter(array_map('trim', explode(',', get_option('ayotte_unlock_emails', ''))));
+        if ($emails) {
+            $user    = wp_get_current_user();
+            $subject = 'Unlock Request';
+            $message = "User {$user->user_email} requested unlock for form {$form_id}.\nReason: {$reason}";
+            $sender  = new Ayotte_Email_Sender();
+            foreach ($emails as $to) {
+                $sender->send_email($to, $subject, $message);
+            }
+        }
+
+        ayotte_log_message('INFO', "Unlock requested for form {$form_id} user {$user_id}", 'admin panel');
+        wp_send_json_success(['message' => 'Request submitted']);
+    }
+
+    /**
      * Unlock a previously locked form for a user.
      */
     public function unlock_form() {
@@ -423,6 +495,7 @@ class Ayotte_Admin_Panel {
         }
 
         update_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", 1);
+        delete_user_meta($user_id, "ayotte_form_{$form_id}_unlock_request");
 
         $db = Custom_DB::get_instance()->get_connection();
         if (!$db instanceof WP_Error) {
