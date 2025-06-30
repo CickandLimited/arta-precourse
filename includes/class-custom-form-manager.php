@@ -211,6 +211,22 @@ class Custom_Form_Manager {
         if (!$res || !$res->num_rows) return '<p>Form not found.</p>';
         $fields = [];
         while ($row = $res->fetch_assoc()) $fields[] = $row;
+
+        // Pull latest draft data for this user
+        $user_id = get_current_user_id();
+        $values  = [];
+        if ($user_id) {
+            $dres = $db->query(
+                "SELECT data FROM custom_form_submissions WHERE form_id=$id AND user_id=$user_id AND status='draft' ORDER BY submitted_at DESC LIMIT 1"
+            );
+            if ($dres && $dres->num_rows) {
+                $row  = $dres->fetch_assoc();
+                $data = json_decode($row['data'], true);
+                if (is_array($data)) {
+                    $values = $data;
+                }
+            }
+        }
         ob_start();
         ?>
         <form id="ayotteCustomForm<?php echo $id; ?>" enctype="multipart/form-data">
@@ -220,35 +236,51 @@ class Custom_Form_Manager {
                 <?php $name = 'field_'.$f['id']; ?>
                 <p>
                     <label><?php echo esc_html($f['label']); ?><br>
-                    <?php switch($f['type']) {
-                        case 'textarea':
-                            echo '<textarea name="'.$name.'"></textarea>'; break;
-                        case 'date':
-                            echo '<input type="date" name="'.$name.'">'; break;
-                        case 'static':
-                            echo '<span>'.esc_html($f['options']).'</span>'; break;
-                        case 'file':
-                            echo '<input type="file" name="'.$name.'">'; break;
-                        default:
-                            echo '<input type="text" name="'.$name.'">';
-                    } ?>
+                    <?php
+                        $val = $values[$name] ?? '';
+                        switch($f['type']) {
+                            case 'textarea':
+                                echo '<textarea name="'.$name.'">'.esc_textarea($val).'</textarea>'; break;
+                            case 'date':
+                                echo '<input type="date" name="'.$name.'" value="'.esc_attr($val).'">'; break;
+                            case 'static':
+                                echo '<span>'.esc_html($f['options']).'</span>'; break;
+                            case 'file':
+                                echo '<input type="file" name="'.$name.'">';
+                                if (!empty($val)) echo '<br><em>Current: <a href="'.esc_url($val).'" target="_blank">View</a></em>';
+                                break;
+                            default:
+                                echo '<input type="text" name="'.$name.'" value="'.esc_attr($val).'">';
+                        }
+                    ?>
                     </label>
                 </p>
             <?php endforeach; ?>
+            <button type="button" class="ayotte-save-draft">Save Draft</button>
             <button type="submit">Submit</button>
             <span class="ayotte-custom-result"></span>
         </form>
         <script>
-        document.getElementById('ayotteCustomForm<?php echo $id; ?>').onsubmit = function(e){
-            e.preventDefault();
-            const form=this;
-            const data=new FormData(form);
-            fetch(ajaxurl+"?action=ayotte_custom_form_submit",{method:'POST',body:data})
-                .then(r=>r.json()).then(res=>{
-                    form.querySelector('.ayotte-custom-result').textContent=res.success?'Saved':'Error';
-                    if(res.success) form.reset();
-                });
-        };
+        (function(){
+            const form = document.getElementById('ayotteCustomForm<?php echo $id; ?>');
+            form.onsubmit = function(e){
+                e.preventDefault();
+                const data = new FormData(form);
+                fetch(ajaxurl+"?action=ayotte_custom_form_submit",{method:'POST',body:data})
+                    .then(r=>r.json()).then(res=>{
+                        form.querySelector('.ayotte-custom-result').textContent=res.success?'Saved':'Error';
+                        if(res.success) form.reset();
+                    });
+            };
+            form.querySelector('.ayotte-save-draft').addEventListener('click', function(e){
+                e.preventDefault();
+                const data = new FormData(form);
+                fetch(ajaxurl+"?action=ayotte_custom_form_save_draft",{method:'POST',body:data})
+                    .then(r=>r.json()).then(res=>{
+                        form.querySelector('.ayotte-custom-result').textContent=res.success?'Draft saved':'Error';
+                    });
+            });
+        })();
         </script>
         <?php
         return ob_get_clean();
