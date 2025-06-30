@@ -104,19 +104,27 @@ class Custom_Form_Manager {
                 $id = $db->insert_id;
             }
 
-            $labels = $_POST['field_label'] ?? [];
-            $types  = $_POST['field_type'] ?? [];
-            $texts  = $_POST['field_text'] ?? [];
+            $labels   = $_POST['field_label'] ?? [];
+            $types    = $_POST['field_type'] ?? [];
+            $texts    = $_POST['field_text'] ?? [];
+            $opts_in  = $_POST['field_options'] ?? [];
             $required = $_POST['field_required'] ?? [];
             foreach ($labels as $idx => $label) {
                 $label = sanitize_text_field($label);
                 $type  = sanitize_text_field($types[$idx] ?? 'text');
-                $raw_text = $texts[$idx] ?? '';
-                $text  = ($type === 'static') ? wp_kses_post($raw_text) : sanitize_text_field($raw_text);
+                $raw_text  = $texts[$idx] ?? '';
+                $raw_opts  = $opts_in[$idx] ?? '';
+                if ($type === 'static') {
+                    $value = wp_kses_post($raw_text);
+                } elseif (in_array($type, ['select', 'checkbox', 'radio'], true)) {
+                    $value = sanitize_text_field($raw_opts);
+                } else {
+                    $value = '';
+                }
                 $req   = in_array($idx, $required) ? 1 : 0;
                 $db->query(
                     "INSERT INTO custom_form_fields (form_id,label,type,options,required) VALUES (".
-                    "$id, '".$db->real_escape_string($label)."', '".$db->real_escape_string($type)."', '".$db->real_escape_string($text)."', $req)"
+                    "$id, '".$db->real_escape_string($label)."', '".$db->real_escape_string($type)."', '".$db->real_escape_string($value)."', $req)"
                 );
             }
             echo '<div class="updated"><p>Form saved.</p></div>';
@@ -130,7 +138,7 @@ class Custom_Form_Manager {
                 <?php wp_nonce_field('ayotte_custom_form', 'ayotte_custom_form_nonce'); ?>
                 <p><label>Name<br><input type="text" name="form_name" value="<?php echo esc_attr($name); ?>" class="regular-text"></label></p>
                 <table class="widefat" id="ayotte-form-fields">
-                    <thead><tr><th>Label</th><th>Type</th><th>Text</th><th>Required</th><th></th></tr></thead>
+                    <thead><tr><th>Label</th><th>Type</th><th>Text</th><th>Options</th><th>Required</th><th></th></tr></thead>
                     <tbody>
                         <?php foreach ($fields as $idx => $f) : ?>
                         <tr>
@@ -154,7 +162,7 @@ class Custom_Form_Manager {
                                     } ?>
                                 </select>
                             </td>
-                            <td>
+                            <td class="text-cell">
                                 <?php
                                 if ($f['type'] === 'static') {
                                     wp_editor(
@@ -168,7 +176,16 @@ class Custom_Form_Manager {
                                         ]
                                     );
                                 } else {
-                                    echo '<input type="text" name="field_text[]" value="' . esc_attr($f['options']) . '">';
+                                    echo '<input type="hidden" name="field_text[]" value="">';
+                                }
+                                ?>
+                            </td>
+                            <td class="options-cell">
+                                <?php
+                                if (in_array($f['type'], ['select', 'checkbox', 'radio'], true)) {
+                                    echo '<input type="text" name="field_options[]" value="' . esc_attr($f['options']) . '">';
+                                } else {
+                                    echo '<input type="hidden" name="field_options[]" value="">';
                                 }
                                 ?>
                             </td>
@@ -187,7 +204,8 @@ class Custom_Form_Manager {
             const table = document.getElementById('ayotte-form-fields').querySelector('tbody');
             document.getElementById('add-field').onclick = () => {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td><input type="text" name="field_label[]"></td>`+
+                row.innerHTML =
+                    `<td><input type="text" name="field_label[]"></td>`+
                     `<td><select name="field_type[]">`+
                     `<option value="text">Text</option>`+
                     `<option value="textarea">Textarea</option>`+
@@ -199,21 +217,30 @@ class Custom_Form_Manager {
                     `<option value="radio">Radio</option>`+
                     `<option value="pagebreak">Page Break</option>`+
                     `</select></td>`+
-                    `<td class="options-cell"><input type="text" name="field_text[]"></td>`+
+                    `<td class="text-cell"><input type="hidden" name="field_text[]"></td>`+
+                    `<td class="options-cell"><input type="hidden" name="field_options[]"></td>`+
                     `<td><input type="checkbox" name="field_required[]" value=""></td>`+
                     `<td><button type="button" class="remove button">Remove</button></td>`;
                 table.appendChild(row);
+                handleTypeChange(row.querySelector('select'));
                 updateIndexes();
             };
             function handleTypeChange(sel){
-                const cell = sel.closest('tr').querySelector('.options-cell');
+                const row = sel.closest('tr');
+                const textCell = row.querySelector('.text-cell');
+                const optionsCell = row.querySelector('.options-cell');
                 if(sel.value === 'static'){
-                    cell.innerHTML = '<textarea class="ayotte-static-editor" name="field_text[]"></textarea>';
+                    textCell.innerHTML = '<textarea class="ayotte-static-editor" name="field_text[]"></textarea>';
+                    optionsCell.innerHTML = '<input type="hidden" name="field_options[]">';
                     if(window.wp && wp.editor){
-                        wp.editor.initialize(cell.querySelector('textarea'));
+                        wp.editor.initialize(textCell.querySelector('textarea'));
                     }
+                }else if(['select','checkbox','radio'].includes(sel.value)){
+                    textCell.innerHTML = '<input type="hidden" name="field_text[]">';
+                    optionsCell.innerHTML = '<input type="text" name="field_options[]">';
                 }else{
-                    cell.innerHTML = '<input type="text" name="field_text[]">';
+                    textCell.innerHTML = '<input type="hidden" name="field_text[]">';
+                    optionsCell.innerHTML = '<input type="hidden" name="field_options[]">';
                 }
             }
            table.addEventListener('click', e=>{
