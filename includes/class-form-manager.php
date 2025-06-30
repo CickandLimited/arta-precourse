@@ -117,43 +117,49 @@ class Ayotte_Form_Manager {
                 $status   = $status_map[$form_id] ?? $tracker->get_form_status($form_id, $user_id);
                 $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
 
+                $url  = esc_url(add_query_arg('form_id', $form_id, site_url('/precourse-form')));
                 $name = Ayotte_Progress_Tracker::get_form_name($form_id);
 
-                $submitted = in_array($status, ['completed', 'locked'], true);
-                $locked    = ($status === 'locked') && !$unlocked;
-                switch ($status) {
-                    case 'locked':
-                        $status_label = 'Completed (Locked)';
-                        break;
-                    case 'completed':
-                        $status_label = 'Completed';
-                        break;
-                    case 'draft':
-                        $status_label = 'In Progress';
-                        break;
-                    default:
-                        $status_label = 'Outstanding';
-                        break;
-                }
-
-                $url = esc_url(add_query_arg('form_id', $form_id, site_url('/precourse-form')));
-
-                if ($locked) {
-                    $action = '<a class="button" href="' . $url . '">View</a>';
+                $submitted     = in_array($status, ['completed', 'locked'], true);
+                $locked        = ($status === 'locked') && !$unlocked;
+                $status_class  = $status;
+                if ($unlocked) {
+                    $status_label = 'Unlocked for editing';
+                    $action       = '<a class="button" href="' . $url . '">Edit</a>';
+                    $status_class = 'unlocked';
                 } else {
-                    if ($submitted) {
-                        $text = 'View';
-                    } elseif ($status === 'draft') {
-                        $text = 'Continue';
-                    } else {
-                        $text = 'Start';
+                    switch ($status) {
+                        case 'locked':
+                            $status_label = 'Completed (Locked)';
+                            break;
+                        case 'completed':
+                            $status_label = 'Completed';
+                            break;
+                        case 'draft':
+                            $status_label = 'In Progress';
+                            break;
+                        default:
+                            $status_label = 'Outstanding';
+                            break;
                     }
-                    $action = '<a class="button" href="' . $url . '">' . $text . '</a>';
+
+                    if ($locked) {
+                        $action = '<a class="button" href="' . $url . '">View</a>';
+                    } else {
+                        if ($submitted) {
+                            $text = 'View';
+                        } elseif ($status === 'draft') {
+                            $text = 'Continue';
+                        } else {
+                            $text = 'Start';
+                        }
+                        $action = '<a class="button" href="' . $url . '">' . $text . '</a>';
+                    }
                 }
 
                 echo '<tr>';
                 echo '<td>' . esc_html($name) . '</td>';
-                echo '<td><span class="ayotte-status ' . esc_attr($status) . '">' . esc_html($status_label) . '</span></td>';
+                echo '<td><span class="ayotte-status ' . esc_attr($status_class) . '">' . esc_html($status_label) . '</span></td>';
                 echo '<td>' . $action . '</td>';
                 echo '</tr>';
             }
