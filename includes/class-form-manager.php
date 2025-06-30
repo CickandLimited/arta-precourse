@@ -15,6 +15,10 @@ class Ayotte_Form_Manager {
         if (!is_user_logged_in()) return '<p>Please log in first.</p>';
 
         $user_id = get_current_user_id();
+
+        if (current_user_can('manage_options') && !empty($_GET['user_id'])) {
+            $user_id = intval($_GET['user_id']);
+        }
         $form_id = intval($atts['id'] ?? ($_GET['form_id'] ?? 0));
 
         // If a form ID is provided, display a custom form
@@ -132,10 +136,11 @@ class Ayotte_Form_Manager {
                         break;
                 }
 
+                $url = esc_url(add_query_arg('form_id', $form_id, site_url('/precourse-form')));
+
                 if ($locked) {
-                    $action = '<span class="dashicons dashicons-lock"></span>';
+                    $action = '<a class="button" href="' . $url . '">View</a>';
                 } else {
-                    $url  = esc_url(add_query_arg('form_id', $form_id, site_url('/precourse-form')));
                     if ($submitted) {
                         $text = 'View';
                     } elseif ($status === 'draft') {
@@ -176,6 +181,7 @@ class Ayotte_Form_Manager {
 
         $sub_res = $db->query(
             "SELECT data FROM custom_form_submissions WHERE form_id=" . intval($form_id) .
+            " AND user_id=" . intval($user_id) .
             " ORDER BY submitted_at DESC LIMIT 1"
         );
 
