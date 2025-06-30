@@ -152,6 +152,17 @@ class Ayotte_Admin_Panel {
     public function render_tracking_dashboard() {
         $users = get_users(['role' => 'customer']);
 
+        $available_ids = get_option('ayotte_available_forms', []);
+        $all_forms     = Ayotte_Progress_Tracker::get_custom_forms();
+        $form_options  = [];
+        foreach ($all_forms as $form) {
+            $fid   = intval($form['id'] ?? $form->id);
+            $fname = $form['name'] ?? $form->name;
+            if (in_array($fid, $available_ids, true)) {
+                $form_options[$fid] = $fname;
+            }
+        }
+
         if (isset($_POST['ayotte_assigned_forms']) && check_admin_referer('ayotte_assign_forms')) {
             $tracker = new Ayotte_Progress_Tracker();
             foreach ($users as $user) {
@@ -169,17 +180,6 @@ class Ayotte_Admin_Panel {
 
                 // Always recalculate progress after updating assignments
                 $tracker->recalculate_progress($user_id);
-            }
-        }
-
-        $available_ids = get_option('ayotte_available_forms', []);
-        $all_forms     = Ayotte_Progress_Tracker::get_custom_forms();
-        $form_options  = [];
-        foreach ($all_forms as $form) {
-            $fid   = intval($form['id'] ?? $form->id);
-            $fname = $form['name'] ?? $form->name;
-            if (in_array($fid, $available_ids, true)) {
-                $form_options[$fid] = $fname;
             }
         }
 
