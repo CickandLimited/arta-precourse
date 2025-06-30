@@ -42,6 +42,18 @@ function ayotte_precourse_enqueue_frontend() {
         [],
         AYOTTE_PRECOURSE_VERSION
     );
+    wp_enqueue_script(
+        'ayotte-frontend',
+        plugin_dir_url(__FILE__) . 'assets/js/script.js',
+        [],
+        AYOTTE_PRECOURSE_VERSION,
+        true
+    );
+    wp_add_inline_script(
+        'ayotte-frontend',
+        'var ajaxurl = ' . json_encode(admin_url('admin-ajax.php')) . ';',
+        'before'
+    );
 }
 add_action('wp_enqueue_scripts', 'ayotte_precourse_enqueue_frontend');
 
