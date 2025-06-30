@@ -6,14 +6,7 @@ class Ayotte_Form_DB_Settings {
     }
 
     public function add_menu() {
-        add_submenu_page(
-            'ayotte-precourse',
-            'Form DB Settings',
-            'Form DB Settings',
-            'manage_options',
-            'ayotte-form-db-settings',
-            [$this, 'render_page']
-        );
+        // Submenu removed so settings can appear on the main settings page
     }
 
     public function render_page() {
