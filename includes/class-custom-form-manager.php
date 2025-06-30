@@ -136,14 +136,15 @@ class Custom_Form_Manager {
                             <td>
                                 <select name="field_type[]">
                                     <?php $types = [
-                                        'text'     => 'Text',
-                                        'textarea' => 'Textarea',
-                                        'date'     => 'Date',
-                                        'static'   => 'Static Text',
-                                        'file'     => 'File',
-                                        'checkbox' => 'Checkbox',
-                                        'select'   => 'Select',
-                                        'radio'    => 'Radio'
+                                        'text'      => 'Text',
+                                        'textarea'  => 'Textarea',
+                                        'date'      => 'Date',
+                                        'static'    => 'Static Text',
+                                        'file'      => 'File',
+                                        'checkbox'  => 'Checkbox',
+                                        'select'    => 'Select',
+                                        'radio'     => 'Radio',
+                                        'pagebreak' => 'Page Break'
                                     ];
                                     foreach ($types as $k=>$v) {
                                         $sel = $f['type']==$k ? 'selected' : '';
@@ -177,6 +178,7 @@ class Custom_Form_Manager {
                     `<option value="checkbox">Checkbox</option>`+
                     `<option value="select">Select</option>`+
                     `<option value="radio">Radio</option>`+
+                    `<option value="pagebreak">Page Break</option>`+
                     `</select></td>`+
                     `<td><input type="text" name="field_text[]"></td>`+
                     `<td><input type="checkbox" name="field_required[]" value=""></td>`+
@@ -227,6 +229,7 @@ class Custom_Form_Manager {
         // Pull latest draft data for this user
         $user_id = get_current_user_id();
         $values  = [];
+        $current_page = 0;
         if ($user_id) {
             $dres = $db->query(
                 "SELECT data FROM custom_form_submissions WHERE form_id=$id AND user_id=$user_id AND status='draft' ORDER BY submitted_at DESC LIMIT 1"
@@ -236,70 +239,107 @@ class Custom_Form_Manager {
                 $data = json_decode($row['data'], true);
                 if (is_array($data)) {
                     $values = $data;
+                    if (isset($data['_current_page'])) {
+                        $current_page = intval($data['_current_page']);
+                    }
                 }
             }
         }
+
+        $pages = [];
+        $page_fields = [];
+        foreach ($fields as $f) {
+            if ($f['type'] === 'pagebreak') {
+                $pages[] = $page_fields;
+                $page_fields = [];
+                continue;
+            }
+            $page_fields[] = $f;
+        }
+        $pages[] = $page_fields;
         ob_start();
         ?>
         <form id="ayotteCustomForm<?php echo $id; ?>" enctype="multipart/form-data">
             <?php wp_nonce_field('ayotte_custom_form_submit','ayotte_custom_form_nonce'); ?>
             <input type="hidden" name="form_id" value="<?php echo $id; ?>">
-            <?php foreach ($fields as $f): ?>
-                <?php $name = 'field_'.$f['id']; ?>
-                <p>
-                    <label><?php echo esc_html($f['label']); ?><br>
-                    <?php
-                        $val = $values[$name] ?? '';
-                        switch($f['type']) {
-                            case 'textarea':
-                                echo '<textarea name="'.$name.'">'.esc_textarea($val).'</textarea>'; break;
-                            case 'date':
-                                echo '<input type="date" name="'.$name.'" value="'.esc_attr($val).'">'; break;
-                            case 'static':
-                                echo '<span>'.esc_html($f['options']).'</span>'; break;
-                            case 'file':
-                                echo '<input type="file" name="'.$name.'">';
-                                if (!empty($val)) echo '<br><em>Current: <a href="'.esc_url($val).'" target="_blank">View</a></em>';
-                                break;
-                            case 'checkbox':
-                                $opts = array_map('trim', explode(',', $f['options']));
-                                $selected = $val ? explode(',', $val) : [];
-                                foreach ($opts as $o) {
-                                    $checked = in_array($o, $selected) ? 'checked' : '';
-                                    echo '<label><input type="checkbox" name="'.$name.'[]" value="'.esc_attr($o).'" '.$checked.'> '.esc_html($o).'</label> ';
-                                }
-                                break;
-                            case 'select':
-                                $opts = array_map('trim', explode(',', $f['options']));
-                                echo '<select name="'.$name.'">';
-                                foreach ($opts as $o) {
-                                    $sel = ($o === $val) ? 'selected' : '';
-                                    echo '<option value="'.esc_attr($o).'" '.$sel.'>'.esc_html($o).'</option>';
-                                }
-                                echo '</select>';
-                                break;
-                            case 'radio':
-                                $opts = array_map('trim', explode(',', $f['options']));
-                                foreach ($opts as $o) {
-                                    $checked = ($o === $val) ? 'checked' : '';
-                                    echo '<label><input type="radio" name="'.$name.'" value="'.esc_attr($o).'" '.$checked.'> '.esc_html($o).'</label> ';
-                                }
-                                break;
-                            default:
-                                echo '<input type="text" name="'.$name.'" value="'.esc_attr($val).'">';
-                        }
-                    ?>
-                    </label>
+            <input type="hidden" name="current_page" value="<?php echo $current_page; ?>">
+            <?php foreach ($pages as $pi => $pfields): ?>
+            <div class="ayotte-form-page" data-page="<?php echo $pi; ?>" style="<?php echo $pi==$current_page?'':'display:none'; ?>">
+                <?php foreach ($pfields as $f): ?>
+                    <?php $name = 'field_'.$f['id']; ?>
+                    <p>
+                        <label><?php echo esc_html($f['label']); ?><br>
+                        <?php
+                            $val = $values[$name] ?? '';
+                            switch($f['type']) {
+                                case 'textarea':
+                                    echo '<textarea name="'.$name.'">'.esc_textarea($val).'</textarea>'; break;
+                                case 'date':
+                                    echo '<input type="date" name="'.$name.'" value="'.esc_attr($val).'">'; break;
+                                case 'static':
+                                    echo '<span>'.esc_html($f['options']).'</span>'; break;
+                                case 'file':
+                                    echo '<input type="file" name="'.$name.'">';
+                                    if (!empty($val)) echo '<br><em>Current: <a href="'.esc_url($val).'" target="_blank">View</a></em>';
+                                    break;
+                                case 'checkbox':
+                                    $opts = array_map('trim', explode(',', $f['options']));
+                                    $selected = $val ? explode(',', $val) : [];
+                                    foreach ($opts as $o) {
+                                        $checked = in_array($o, $selected) ? 'checked' : '';
+                                        echo '<label><input type="checkbox" name="'.$name.'[]" value="'.esc_attr($o).'" '.$checked.'> '.esc_html($o).'</label> ';
+                                    }
+                                    break;
+                                case 'select':
+                                    $opts = array_map('trim', explode(',', $f['options']));
+                                    echo '<select name="'.$name.'">';
+                                    foreach ($opts as $o) {
+                                        $sel = ($o === $val) ? 'selected' : '';
+                                        echo '<option value="'.esc_attr($o).'" '.$sel.'>'.esc_html($o).'</option>';
+                                    }
+                                    echo '</select>';
+                                    break;
+                                case 'radio':
+                                    $opts = array_map('trim', explode(',', $f['options']));
+                                    foreach ($opts as $o) {
+                                        $checked = ($o === $val) ? 'checked' : '';
+                                        echo '<label><input type="radio" name="'.$name.'" value="'.esc_attr($o).'" '.$checked.'> '.esc_html($o).'</label> ';
+                                    }
+                                    break;
+                                default:
+                                    echo '<input type="text" name="'.$name.'" value="'.esc_attr($val).'">';
+                            }
+                        ?>
+                        </label>
+                    </p>
+                <?php endforeach; ?>
+                <p class="ayotte-nav">
+                    <?php if ($pi > 0): ?><button type="button" class="prev-page">Previous</button><?php endif; ?>
+                    <?php if ($pi < count($pages)-1): ?><button type="button" class="next-page">Next</button><?php endif; ?>
+                    <?php if ($pi == count($pages)-1): ?>
+                        <button type="button" class="ayotte-save-draft">Save Draft</button>
+                        <button type="submit">Submit</button>
+                    <?php endif; ?>
                 </p>
+            </div>
             <?php endforeach; ?>
-            <button type="button" class="ayotte-save-draft">Save Draft</button>
-            <button type="submit">Submit</button>
             <span class="ayotte-custom-result"></span>
         </form>
         <script>
         (function(){
             const form = document.getElementById('ayotteCustomForm<?php echo $id; ?>');
+            const pages = form.querySelectorAll('.ayotte-form-page');
+            let page = <?php echo $current_page; ?>;
             const dashboardUrl = '<?php echo esc_js(site_url('/precourse-forms')); ?>';
+            function show(i){
+                pages.forEach((p,idx)=>{p.style.display = idx===i ? '' : 'none';});
+                page = i;
+                form.querySelector('[name="current_page"]').value = i;
+            }
+            form.addEventListener('click',e=>{
+                if(e.target.classList.contains('next-page')){e.preventDefault(); if(page < pages.length-1) show(page+1);} 
+                if(e.target.classList.contains('prev-page')){e.preventDefault(); if(page>0) show(page-1);} 
+            });
             form.onsubmit = function(e){
                 e.preventDefault();
                 const data = new FormData(form);
@@ -309,7 +349,7 @@ class Custom_Form_Manager {
                         if(res.success) window.location.href = dashboardUrl;
                     });
             };
-            form.querySelector('.ayotte-save-draft').addEventListener('click', function(e){
+            form.querySelectorAll('.ayotte-save-draft').forEach(btn=>btn.addEventListener('click',function(e){
                 e.preventDefault();
                 const data = new FormData(form);
                 fetch(ajaxurl+"?action=ayotte_custom_form_save_draft",{method:'POST',body:data})
@@ -317,7 +357,8 @@ class Custom_Form_Manager {
                         form.querySelector('.ayotte-custom-result').textContent=res.success?'Draft saved':'Error';
                         if(res.success) window.location.href = dashboardUrl;
                     });
-            });
+            }));
+            show(page);
         })();
         </script>
         <?php
@@ -352,6 +393,7 @@ class Custom_Form_Manager {
         while ($row=$res->fetch_assoc()) $fields[]=$row;
         $data = [];
         foreach ($fields as $f){
+            if ($f['type'] === 'pagebreak') continue;
             $key='field_'.$f['id'];
             if($f['type']=='file'){
                 if(!empty($_FILES[$key]['name'])){
@@ -369,6 +411,9 @@ class Custom_Form_Manager {
             }else{
                 $data[$key]=sanitize_text_field($_POST[$key]??'');
             }
+        }
+        if (isset($_POST['current_page'])) {
+            $data['_current_page'] = intval($_POST['current_page']);
         }
         $json   = $db->real_escape_string(json_encode($data));
         $status = ($status === 'draft') ? 'draft' : 'submitted';
