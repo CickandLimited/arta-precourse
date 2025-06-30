@@ -300,6 +300,7 @@ class Custom_Form_Manager {
         $pages[] = $page_fields;
         ob_start();
         ?>
+        <div class="precourse-form">
         <form id="ayotteCustomForm<?php echo $id; ?>" enctype="multipart/form-data">
             <?php wp_nonce_field('ayotte_custom_form_submit','ayotte_custom_form_nonce'); ?>
             <input type="hidden" name="form_id" value="<?php echo $id; ?>">
@@ -366,6 +367,7 @@ class Custom_Form_Manager {
             <?php endforeach; ?>
             <span class="ayotte-custom-result"></span>
         </form>
+        </div>
         <script>
         (function(){
             const form = document.getElementById('ayotteCustomForm<?php echo $id; ?>');

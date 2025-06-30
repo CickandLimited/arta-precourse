@@ -107,6 +107,23 @@
     display: inline-block;
 }
 
+
+.precourse-form p {
+    margin-bottom: 15px;
+}
+
+.precourse-form input[type=text],
+.precourse-form input[type=date],
+.precourse-form select,
+.precourse-form textarea {
+    width: 100%;
+    max-width: 500px;
+    padding: 6px;
+    border: 1px solid #ccc;
+    color: #333;
+    box-sizing: border-box;
+}
+
 .precourse-form .button:hover {
     opacity: 0.9;
 }
