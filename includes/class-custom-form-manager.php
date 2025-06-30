@@ -4,8 +4,10 @@ class Custom_Form_Manager {
         Custom_DB::get_instance()->ensure_schema();
         add_action('admin_menu', [$this, 'add_menu']);
         add_shortcode('ayotte_custom_form', [$this, 'render_form_shortcode']);
-        add_action('wp_ajax_ayotte_custom_form_submit', [$this, 'handle_submission']);
-        add_action('wp_ajax_nopriv_ayotte_custom_form_submit', [$this, 'handle_submission']);
+        add_action('wp_ajax_ayotte_custom_form_submit', [$this, 'ajax_final_submission']);
+        add_action('wp_ajax_nopriv_ayotte_custom_form_submit', [$this, 'ajax_final_submission']);
+        add_action('wp_ajax_ayotte_custom_form_save_draft', [$this, 'ajax_save_draft']);
+        add_action('wp_ajax_nopriv_ayotte_custom_form_save_draft', [$this, 'ajax_save_draft']);
     }
 
     /**
@@ -255,7 +257,20 @@ class Custom_Form_Manager {
     /**
      * Handle form submissions via AJAX.
      */
-    public function handle_submission() {
+    public function ajax_final_submission() {
+        $this->handle_submission('submitted');
+    }
+
+    public function ajax_save_draft() {
+        $this->handle_submission('draft');
+    }
+
+    /**
+     * Handle form submissions via AJAX.
+     *
+     * @param string $status draft|submitted
+     */
+    public function handle_submission($status = 'submitted') {
         check_ajax_referer('ayotte_custom_form_submit','ayotte_custom_form_nonce');
         $id = intval($_POST['form_id'] ?? 0);
         $db = Custom_DB::get_instance()->get_connection();
@@ -277,9 +292,24 @@ class Custom_Form_Manager {
                 $data[$key]=sanitize_text_field($_POST[$key]??'');
             }
         }
-        $json=$db->real_escape_string(json_encode($data));
-        $db->query("INSERT INTO custom_form_submissions (form_id,user_id,submitted_at,data) VALUES ($id,$user_id,NOW(),'$json')");
-        do_action('ayotte_custom_form_submitted', $id, $user_id, $db->insert_id);
+        $json   = $db->real_escape_string(json_encode($data));
+        $status = ($status === 'draft') ? 'draft' : 'submitted';
+        $locked = ($status === 'draft') ? 0 : 1;
+
+        $existing = $db->query("SELECT id FROM custom_form_submissions WHERE form_id=$id AND user_id=$user_id LIMIT 1");
+        if ($existing && $existing->num_rows) {
+            $row = $existing->fetch_assoc();
+            $submission_id = intval($row['id']);
+            $db->query("UPDATE custom_form_submissions SET data='$json', status='$status', locked=$locked, submitted_at=NOW() WHERE id=$submission_id");
+        } else {
+            $db->query("INSERT INTO custom_form_submissions (form_id,user_id,submitted_at,data,status,locked) VALUES ($id,$user_id,NOW(),'$json','$status',$locked)");
+            $submission_id = $db->insert_id;
+        }
+
+        if ($status === 'submitted') {
+            do_action('ayotte_custom_form_submitted', $id, $submission_id);
+        }
+
         wp_send_json_success();
     }
 }
