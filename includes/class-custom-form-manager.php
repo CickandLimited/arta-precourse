@@ -340,15 +340,16 @@ class Custom_Form_Manager {
                         <label><?php echo esc_html($f['label']); ?><br>
                         <?php
                             $val = $values[$name] ?? '';
+                            $req = $f['required'] ? ' required' : '';
                             switch($f['type']) {
                                 case 'textarea':
-                                    echo '<textarea name="'.$name.'">'.esc_textarea($val).'</textarea>'; break;
+                                    echo '<textarea name="'.$name.'"'.$req.'>'.esc_textarea($val).'</textarea>'; break;
                                 case 'date':
-                                    echo '<input type="date" name="'.$name.'" value="'.esc_attr($val).'">'; break;
+                                    echo '<input type="date" name="'.$name.'" value="'.esc_attr($val).'"'.$req.'>'; break;
                                 case 'static':
                                     echo '<span>'.wp_kses_post($f['options']).'</span>'; break;
                                 case 'file':
-                                    echo '<input type="file" name="'.$name.'">';
+                                    echo '<input type="file" name="'.$name.'"'.$req.'>';
                                     if (!empty($val)) echo '<br><em>Current: <a href="'.esc_url($val).'" target="_blank">View</a></em>';
                                     break;
                                 case 'checkbox':
@@ -356,12 +357,12 @@ class Custom_Form_Manager {
                                     $selected = $val ? explode(',', $val) : [];
                                     foreach ($opts as $o) {
                                         $checked = in_array($o, $selected) ? 'checked' : '';
-                                        echo '<label><input type="checkbox" name="'.$name.'[]" value="'.esc_attr($o).'" '.$checked.'> '.esc_html($o).'</label> ';
+                                        echo '<label><input type="checkbox" name="'.$name.'[]" value="'.esc_attr($o).'" '.$checked.$req.'> '.esc_html($o).'</label> ';
                                     }
                                     break;
                                 case 'select':
                                     $opts = array_map('trim', explode(',', $f['options']));
-                                    echo '<select name="'.$name.'">';
+                                    echo '<select name="'.$name.'"'.$req.'>'; 
                                     foreach ($opts as $o) {
                                         $sel = ($o === $val) ? 'selected' : '';
                                         echo '<option value="'.esc_attr($o).'" '.$sel.'>'.esc_html($o).'</option>';
@@ -372,11 +373,11 @@ class Custom_Form_Manager {
                                     $opts = array_map('trim', explode(',', $f['options']));
                                     foreach ($opts as $o) {
                                         $checked = ($o === $val) ? 'checked' : '';
-                                        echo '<label><input type="radio" name="'.$name.'" value="'.esc_attr($o).'" '.$checked.'> '.esc_html($o).'</label> ';
+                                        echo '<label><input type="radio" name="'.$name.'" value="'.esc_attr($o).'" '.$checked.$req.'> '.esc_html($o).'</label> ';
                                     }
                                     break;
                                 default:
-                                    echo '<input type="text" name="'.$name.'" value="'.esc_attr($val).'">';
+                                    echo '<input type="text" name="'.$name.'" value="'.esc_attr($val).'"'.$req.'>';
                             }
                         ?>
                         </label>
@@ -493,6 +494,16 @@ class Custom_Form_Manager {
                 }
             }else{
                 $data[$key]=sanitize_text_field($_POST[$key]??'');
+            }
+        }
+        if ($status === 'submitted') {
+            foreach ($fields as $f) {
+                if ($f['type'] === 'pagebreak' || !$f['required']) continue;
+                $key = 'field_'.$f['id'];
+                $val = $data[$key] ?? '';
+                if ($val === '' && $val !== '0') {
+                    wp_send_json_error(['message' => 'Please complete all required fields']);
+                }
             }
         }
         if (isset($_POST['current_page'])) {
