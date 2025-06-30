@@ -84,7 +84,7 @@ class Ayotte_Progress_Tracker {
             $status = $row['status'];
 
             if ($locked) {
-                return 'completed';
+                return 'locked';
             }
 
             return ($status === 'draft') ? 'draft' : 'completed';
@@ -127,9 +127,9 @@ class Ayotte_Progress_Tracker {
             if ($res && $res->num_rows) {
                 $row = $res->fetch_assoc();
                 if (intval($row['locked'])) {
-                    $status = 'completed';
+                    $status = 'locked';
                 } else {
-                    $status = ($row['status'] === 'draft') ? 'draft' : 'outstanding';
+                    $status = ($row['status'] === 'draft') ? 'draft' : 'completed';
                 }
             }
         }
@@ -159,7 +159,7 @@ class Ayotte_Progress_Tracker {
         foreach ($assigned as $id) {
             $status = $this->get_form_status($id, $user_id);
             update_user_meta($user_id, "ayotte_form_{$id}_status", $status);
-            if ($status === 'completed') {
+            if ($status === 'completed' || $status === 'locked') {
                 $points += 100;
             } elseif ($status === 'draft') {
                 $points += 50;
