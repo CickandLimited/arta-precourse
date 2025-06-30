@@ -6,6 +6,7 @@ class Ayotte_Admin_Panel {
      */
     public function render_settings_page() {
         $this->render_debug_console();
+        (new Ayotte_Form_DB_Settings())->render_page();
     }
 
     public function render_debug_console() {
