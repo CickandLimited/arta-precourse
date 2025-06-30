@@ -73,9 +73,21 @@ class Ayotte_Progress_Tracker {
 
         $form_id = intval($form_id);
         $user_id = intval($user_id);
-        $res = $db->query("SELECT id FROM custom_form_submissions WHERE form_id=$form_id AND user_id=$user_id LIMIT 1");
+        $res = $db->query(
+            "SELECT status, locked FROM custom_form_submissions " .
+            "WHERE form_id=$form_id AND user_id=$user_id " .
+            "ORDER BY submitted_at DESC LIMIT 1"
+        );
         if ($res && $res->num_rows) {
-            return 'completed';
+            $row    = $res->fetch_assoc();
+            $locked = intval($row['locked']);
+            $status = $row['status'];
+
+            if ($locked) {
+                return 'completed';
+            }
+
+            return ($status === 'draft') ? 'draft' : 'completed';
         }
         return 'outstanding';
     }
@@ -104,7 +116,25 @@ class Ayotte_Progress_Tracker {
             ayotte_log_message('ERROR', "Missing submission ID for form $form_id user $user_id", 'progress tracker');
         }
 
-        update_user_meta($user_id, "ayotte_form_{$form_id}_status", 'completed');
+        $status = 'completed';
+        $db     = Custom_DB::get_instance()->get_connection();
+        if (!$db instanceof WP_Error) {
+            $sid = $submission_id ? intval($submission_id) : 0;
+            $query = $sid
+                ? "SELECT status, locked FROM custom_form_submissions WHERE id=$sid LIMIT 1"
+                : "SELECT status, locked FROM custom_form_submissions WHERE form_id=" . intval($form_id) . " AND user_id=$user_id ORDER BY submitted_at DESC LIMIT 1";
+            $res = $db->query($query);
+            if ($res && $res->num_rows) {
+                $row = $res->fetch_assoc();
+                if (intval($row['locked'])) {
+                    $status = 'completed';
+                } else {
+                    $status = ($row['status'] === 'draft') ? 'draft' : 'outstanding';
+                }
+            }
+        }
+
+        update_user_meta($user_id, "ayotte_form_{$form_id}_status", $status);
         $this->recalculate_progress($user_id);
     }
 
