@@ -242,6 +242,7 @@ class Custom_Form_Manager {
         $id = intval($_POST['form_id'] ?? 0);
         $db = Custom_DB::get_instance()->get_connection();
         if ($db instanceof WP_Error) wp_send_json_error();
+        $user_id = get_current_user_id();
         $res = $db->query("SELECT * FROM custom_form_fields WHERE form_id=$id ORDER BY id ASC");
         if (!$res) wp_send_json_error();
         $fields = [];
@@ -259,7 +260,8 @@ class Custom_Form_Manager {
             }
         }
         $json=$db->real_escape_string(json_encode($data));
-        $db->query("INSERT INTO custom_form_submissions (form_id,submitted_at,data) VALUES ($id,NOW(),'$json')");
+        $db->query("INSERT INTO custom_form_submissions (form_id,user_id,submitted_at,data) VALUES ($id,$user_id,NOW(),'$json')");
+        do_action('ayotte_custom_form_submitted', $id, $user_id, $db->insert_id);
         wp_send_json_success();
     }
 }
