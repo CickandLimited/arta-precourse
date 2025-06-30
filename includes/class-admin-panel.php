@@ -171,11 +171,13 @@ class Ayotte_Admin_Panel {
         }
 
         $available_ids = get_option('ayotte_available_forms', []);
-        $all_forms     = Ayotte_Progress_Tracker::forminator_get_forms() ?: [];
+        $all_forms     = Ayotte_Progress_Tracker::get_custom_forms();
         $form_options  = [];
         foreach ($all_forms as $form) {
-            if (in_array($form->id, $available_ids, true)) {
-                $form_options[$form->id] = $form->name;
+            $fid   = intval($form['id'] ?? $form->id);
+            $fname = $form['name'] ?? $form->name;
+            if (in_array($fid, $available_ids, true)) {
+                $form_options[$fid] = $fname;
             }
         }
 
@@ -266,7 +268,7 @@ class Ayotte_Admin_Panel {
         }
 
         $selected = get_option('ayotte_available_forms', []);
-        $forms    = Ayotte_Progress_Tracker::forminator_get_forms() ?: [];
+        $forms    = Ayotte_Progress_Tracker::get_custom_forms();
 
         echo '<div class="wrap ayotte-admin-panel">';
         echo '<h1>Form Sets</h1>';
@@ -275,8 +277,10 @@ class Ayotte_Admin_Panel {
         wp_nonce_field('ayotte_form_sets');
 
         foreach ($forms as $form) {
-            $checked = in_array($form->id, $selected, true) ? 'checked' : '';
-            echo '<p><label><input type="checkbox" name="ayotte_available_forms[]" value="' . esc_attr($form->id) . '" ' . $checked . '> ' . esc_html($form->name) . '</label></p>';
+            $fid     = intval($form['id'] ?? $form->id);
+            $fname   = $form['name'] ?? $form->name;
+            $checked = in_array($fid, $selected, true) ? 'checked' : '';
+            echo '<p><label><input type="checkbox" name="ayotte_available_forms[]" value="' . esc_attr($fid) . '" ' . $checked . '> ' . esc_html($fname) . '</label></p>';
         }
 
         echo '<p><button type="submit" class="button button-primary">Save Forms</button></p>';
