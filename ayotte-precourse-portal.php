@@ -110,15 +110,10 @@ register_activation_hook(__FILE__, function() {
             'post_type'    => 'page',
         ]);
     }
-    // Create precourse form page
-    if (!get_page_by_path('precourse-form')) {
-        wp_insert_post([
-            'post_title'   => 'Precourse Form',
-            'post_name'    => 'precourse-form',
-            'post_content' => '[ayotte_precourse_form]',
-            'post_status'  => 'publish',
-            'post_type'    => 'page',
-        ]);
+    // Remove any legacy precourse form page
+    $legacy = get_page_by_path('precourse-form');
+    if ($legacy) {
+        wp_delete_post($legacy->ID, true);
     }
     flush_rewrite_rules();
 });
