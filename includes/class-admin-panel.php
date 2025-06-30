@@ -157,6 +157,8 @@ class Ayotte_Admin_Panel {
             foreach ($users as $user) {
                 $user_id = (int) $user->ID;
                 $forms   = array_map('intval', (array) ($_POST['ayotte_assigned_forms'][$user_id] ?? []));
+                // Only store IDs for forms that actually exist in the custom database
+                $forms   = array_values(array_intersect($forms, array_keys($form_options)));
                 update_user_meta($user_id, 'ayotte_assigned_forms', $forms);
 
                 $unlock = $_POST['ayotte_unlock_forms'][$user_id] ?? [];
@@ -199,7 +201,7 @@ class Ayotte_Admin_Panel {
                     update_user_meta($user->ID, "ayotte_form_{$form_id}_status", $status);
                     $changed = true;
                 }
-                $name   = $form_options[$form_id] ?? 'Form ' . $form_id;
+                $name   = $form_options[$form_id] ?? Ayotte_Progress_Tracker::get_form_name($form_id);
                 switch ($status) {
                     case 'completed':
                         $label   = 'Completed';
@@ -246,7 +248,7 @@ class Ayotte_Admin_Panel {
 
             echo '<td><ul class="form-unlock-list">';
             foreach ($assigned as $id) {
-                $name = $form_options[$id] ?? 'Form ' . $id;
+                $name = $form_options[$id] ?? Ayotte_Progress_Tracker::get_form_name($id);
                 echo '<li><label><input type="checkbox" name="ayotte_unlock_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '"> ' . esc_html($name) . '</label></li>';
             }
             echo '</ul></td>';
