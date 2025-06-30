@@ -262,10 +262,16 @@ class Custom_Form_Manager {
         while ($row = $res->fetch_assoc()) $fields[] = $row;
 
         // Pull latest draft data for this user
-        $user_id = get_current_user_id();
-        $values  = [];
+        $user_id      = get_current_user_id();
+        $values       = [];
         $current_page = 0;
         if ($user_id) {
+            $tracker  = new Ayotte_Progress_Tracker();
+            $status   = $tracker->get_form_status($id, $user_id);
+            $unlocked = get_user_meta($user_id, "ayotte_form_{$id}_unlocked", true);
+            if (in_array($status, ['locked', 'completed'], true) && !$unlocked) {
+                return (new Ayotte_Form_Manager())->render_readonly_submission($id, $user_id);
+            }
             $dres = $db->query(
                 "SELECT data FROM custom_form_submissions WHERE form_id=$id AND user_id=$user_id AND status='draft' ORDER BY submitted_at DESC LIMIT 1"
             );
@@ -426,6 +432,19 @@ class Custom_Form_Manager {
         if (!$res) wp_send_json_error();
         $fields = [];
         while ($row=$res->fetch_assoc()) $fields[]=$row;
+
+        $unlocked_meta = get_user_meta($user_id, "ayotte_form_{$id}_unlocked", true);
+        $last = $db->query("SELECT id, locked FROM custom_form_submissions WHERE form_id=$id AND user_id=$user_id ORDER BY submitted_at DESC LIMIT 1");
+        $submission_id = 0;
+        $previous_locked = 0;
+        if ($last && $last->num_rows) {
+            $row = $last->fetch_assoc();
+            $submission_id = intval($row['id']);
+            $previous_locked = intval($row['locked']);
+            if ($previous_locked && !$unlocked_meta) {
+                wp_send_json_error();
+            }
+        }
         $data = [];
         foreach ($fields as $f){
             if ($f['type'] === 'pagebreak') continue;
@@ -454,10 +473,7 @@ class Custom_Form_Manager {
         $status = ($status === 'draft') ? 'draft' : 'submitted';
         $locked = ($status === 'draft') ? 0 : 1;
 
-        $existing = $db->query("SELECT id FROM custom_form_submissions WHERE form_id=$id AND user_id=$user_id LIMIT 1");
-        if ($existing && $existing->num_rows) {
-            $row = $existing->fetch_assoc();
-            $submission_id = intval($row['id']);
+        if ($submission_id) {
             $db->query("UPDATE custom_form_submissions SET data='$json', status='$status', locked=$locked, submitted_at=NOW() WHERE id=$submission_id");
         } else {
             $db->query("INSERT INTO custom_form_submissions (form_id,user_id,submitted_at,data,status,locked) VALUES ($id,$user_id,NOW(),'$json','$status',$locked)");
@@ -465,7 +481,8 @@ class Custom_Form_Manager {
         }
 
         if ($status === 'submitted') {
-            do_action('ayotte_custom_form_submitted', $id, $db->insert_id);
+            delete_user_meta($user_id, "ayotte_form_{$id}_unlocked");
+            do_action('ayotte_custom_form_submitted', $id, $submission_id);
         }
 
         $tracker = new Ayotte_Progress_Tracker();
