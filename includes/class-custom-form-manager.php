@@ -135,7 +135,16 @@ class Custom_Form_Manager {
                             <td><input type="text" name="field_label[]" value="<?php echo esc_attr($f['label']); ?>"></td>
                             <td>
                                 <select name="field_type[]">
-                                    <?php $types = ['text'=>'Text','textarea'=>'Textarea','date'=>'Date','static'=>'Static Text','file'=>'File'];
+                                    <?php $types = [
+                                        'text'     => 'Text',
+                                        'textarea' => 'Textarea',
+                                        'date'     => 'Date',
+                                        'static'   => 'Static Text',
+                                        'file'     => 'File',
+                                        'checkbox' => 'Checkbox',
+                                        'select'   => 'Select',
+                                        'radio'    => 'Radio'
+                                    ];
                                     foreach ($types as $k=>$v) {
                                         $sel = $f['type']==$k ? 'selected' : '';
                                         echo '<option value="'.$k.'" '.$sel.'>'.$v.'</option>';
@@ -165,6 +174,9 @@ class Custom_Form_Manager {
                     `<option value="date">Date</option>`+
                     `<option value="static">Static Text</option>`+
                     `<option value="file">File</option>`+
+                    `<option value="checkbox">Checkbox</option>`+
+                    `<option value="select">Select</option>`+
+                    `<option value="radio">Radio</option>`+
                     `</select></td>`+
                     `<td><input type="text" name="field_text[]"></td>`+
                     `<td><input type="checkbox" name="field_required[]" value=""></td>`+
@@ -249,6 +261,30 @@ class Custom_Form_Manager {
                                 echo '<input type="file" name="'.$name.'">';
                                 if (!empty($val)) echo '<br><em>Current: <a href="'.esc_url($val).'" target="_blank">View</a></em>';
                                 break;
+                            case 'checkbox':
+                                $opts = array_map('trim', explode(',', $f['options']));
+                                $selected = $val ? explode(',', $val) : [];
+                                foreach ($opts as $o) {
+                                    $checked = in_array($o, $selected) ? 'checked' : '';
+                                    echo '<label><input type="checkbox" name="'.$name.'[]" value="'.esc_attr($o).'" '.$checked.'> '.esc_html($o).'</label> ';
+                                }
+                                break;
+                            case 'select':
+                                $opts = array_map('trim', explode(',', $f['options']));
+                                echo '<select name="'.$name.'">';
+                                foreach ($opts as $o) {
+                                    $sel = ($o === $val) ? 'selected' : '';
+                                    echo '<option value="'.esc_attr($o).'" '.$sel.'>'.esc_html($o).'</option>';
+                                }
+                                echo '</select>';
+                                break;
+                            case 'radio':
+                                $opts = array_map('trim', explode(',', $f['options']));
+                                foreach ($opts as $o) {
+                                    $checked = ($o === $val) ? 'checked' : '';
+                                    echo '<label><input type="radio" name="'.$name.'" value="'.esc_attr($o).'" '.$checked.'> '.esc_html($o).'</label> ';
+                                }
+                                break;
                             default:
                                 echo '<input type="text" name="'.$name.'" value="'.esc_attr($val).'">';
                         }
@@ -321,6 +357,14 @@ class Custom_Form_Manager {
                 if(!empty($_FILES[$key]['name'])){
                     $upload=wp_handle_upload($_FILES[$key], ['test_form'=>false]);
                     if(!isset($upload['error'])) $data[$key]=$upload['url'];
+                }
+            }elseif($f['type']=='checkbox'){
+                $vals = $_POST[$key] ?? [];
+                if(is_array($vals)) {
+                    $vals = array_map('sanitize_text_field', $vals);
+                    $data[$key] = implode(',', $vals);
+                } else {
+                    $data[$key] = sanitize_text_field($vals);
                 }
             }else{
                 $data[$key]=sanitize_text_field($_POST[$key]??'');
