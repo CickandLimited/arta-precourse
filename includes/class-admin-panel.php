@@ -203,6 +203,10 @@ class Ayotte_Admin_Panel {
                 }
                 $name   = $form_options[$form_id] ?? Ayotte_Progress_Tracker::get_form_name($form_id);
                 switch ($status) {
+                    case 'locked':
+                        $label   = 'Completed (Locked)';
+                        $percent = 100;
+                        break;
                     case 'completed':
                         $label   = 'Completed';
                         $percent = 100;
@@ -216,7 +220,7 @@ class Ayotte_Admin_Panel {
                         $percent = 0;
                         break;
                 }
-                $progress_class = ($percent === 100) ? 'completed'
+                $progress_class = ($status === 'locked' || $percent === 100) ? 'completed'
                                  : (($percent >= 50) ? 'draft' : 'outstanding');
 
                 $item  = '<li>' . esc_html($name . ' - ' . $label)
