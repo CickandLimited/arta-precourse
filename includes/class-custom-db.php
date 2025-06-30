@@ -51,7 +51,7 @@ class Custom_DB {
         $tables = [
             'custom_forms' => "CREATE TABLE custom_forms (\n              id INT AUTO_INCREMENT PRIMARY KEY,\n              name VARCHAR(255) NOT NULL\n            )",
             'custom_form_fields' => "CREATE TABLE custom_form_fields (\n              id INT AUTO_INCREMENT PRIMARY KEY,\n              form_id INT NOT NULL,\n              label VARCHAR(255),\n              type VARCHAR(50),\n              options TEXT,\n              required TINYINT(1) DEFAULT 0\n            )",
-            'custom_form_submissions' => "CREATE TABLE custom_form_submissions (\n              id INT AUTO_INCREMENT PRIMARY KEY,\n              form_id INT NOT NULL,\n              user_id INT NOT NULL,\n              submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n              data LONGTEXT\n            )"
+            'custom_form_submissions' => "CREATE TABLE custom_form_submissions (\n              id INT AUTO_INCREMENT PRIMARY KEY,\n              form_id INT NOT NULL,\n              user_id INT NOT NULL,\n              submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n              data LONGTEXT,\n              status VARCHAR(20) NOT NULL DEFAULT 'draft',\n              locked TINYINT(1) DEFAULT 0\n            )"
         ];
 
         foreach ($tables as $name => $sql) {
@@ -68,8 +68,10 @@ class Custom_DB {
                 'required' => "ALTER TABLE custom_form_fields ADD COLUMN required TINYINT(1) DEFAULT 0"
             ],
             'custom_form_submissions' => [
-                'data' => "ALTER TABLE custom_form_submissions ADD COLUMN data LONGTEXT",
-                'user_id' => "ALTER TABLE custom_form_submissions ADD COLUMN user_id INT NOT NULL"
+                'data'   => "ALTER TABLE custom_form_submissions ADD COLUMN data LONGTEXT",
+                'user_id' => "ALTER TABLE custom_form_submissions ADD COLUMN user_id INT NOT NULL",
+                'status' => "ALTER TABLE custom_form_submissions ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'draft'",
+                'locked' => "ALTER TABLE custom_form_submissions ADD COLUMN locked TINYINT(1) DEFAULT 0"
             ]
         ];
 
