@@ -26,9 +26,15 @@ class Custom_Form_Manager {
      * Display list of forms with options to edit or delete.
      */
     public function list_forms() {
-        if (isset($_GET['action']) && $_GET['action'] === 'edit') {
-            $this->edit_form();
-            return;
+        if (isset($_GET['action'])) {
+            if ($_GET['action'] === 'edit') {
+                $this->edit_form();
+                return;
+            }
+            if ($_GET['action'] === 'preview') {
+                $this->preview_form();
+                return;
+            }
         }
 
         $db = Custom_DB::get_instance()->get_connection();
@@ -50,9 +56,10 @@ class Custom_Form_Manager {
             echo '<table class="widefat"><thead><tr><th>ID</th><th>Name</th><th>Actions</th></tr></thead><tbody>';
             while ($row = $forms->fetch_assoc()) {
                 $id = intval($row['id']);
-                $edit = esc_url(add_query_arg(['page'=>'ayotte-custom-forms','action'=>'edit','form_id'=>$id], admin_url('admin.php')));
-                $del  = esc_url(add_query_arg(['page'=>'ayotte-custom-forms','action'=>'delete','form_id'=>$id], admin_url('admin.php')));
-                echo '<tr><td>' . $id . '</td><td>' . esc_html($row['name']) . '</td><td><a href="' . $edit . '">Edit</a> | <a href="' . $del . '">Delete</a></td></tr>';
+                $edit    = esc_url(add_query_arg(['page'=>'ayotte-custom-forms','action'=>'edit','form_id'=>$id], admin_url('admin.php')));
+                $del     = esc_url(add_query_arg(['page'=>'ayotte-custom-forms','action'=>'delete','form_id'=>$id], admin_url('admin.php')));
+                $preview = esc_url(add_query_arg(['page'=>'ayotte-custom-forms','action'=>'preview','form_id'=>$id], admin_url('admin.php')));
+                echo '<tr><td>' . $id . '</td><td>' . esc_html($row['name']) . '</td><td><a href="' . $edit . '">Edit</a> | <a href="' . $del . '">Delete</a> | <a href="' . $preview . '">Preview</a></td></tr>';
             }
             echo '</tbody></table>';
         } else {
@@ -177,6 +184,17 @@ class Custom_Form_Manager {
         })();
         </script>
         <?php
+    }
+
+    /**
+     * Render a preview of a form within the admin area.
+     */
+    public function preview_form() {
+        $id = intval($_GET['form_id'] ?? 0);
+        echo '<div class="wrap">';
+        echo '<h1>Preview Form</h1>';
+        echo $this->render_form_shortcode(['id' => $id]);
+        echo '</div>';
     }
 
     /**
