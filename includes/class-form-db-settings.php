@@ -83,6 +83,7 @@ class Ayotte_Form_DB_Settings {
         if ($conn instanceof WP_Error) {
             wp_send_json_error();
         } else {
+            $db->ensure_schema();
             wp_send_json_success();
         }
     }
