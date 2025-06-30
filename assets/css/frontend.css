@@ -110,3 +110,34 @@
 .precourse-form .button:hover {
     opacity: 0.9;
 }
+
+/* Read only view of a submitted custom form */
+.ayotte-readonly-form {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.ayotte-readonly-form table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ayotte-readonly-form th {
+    background: #a32c2e;
+    color: #fff;
+    text-align: left;
+    padding: 8px 10px;
+}
+
+.ayotte-readonly-form td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.ayotte-readonly-form tr:nth-child(even) {
+    background: #f7f7f7;
+}
