@@ -167,7 +167,7 @@ class Ayotte_Form_Manager {
     /**
      * Fetch a user submission and render it in read-only mode.
      */
-    private function render_readonly_submission($form_id, $user_id) {
+    public function render_readonly_submission($form_id, $user_id) {
         $db = Custom_DB::get_instance()->get_connection();
         if ($db instanceof WP_Error) {
             return '<p>Form submitted.</p>';
