@@ -50,7 +50,9 @@ class Ayotte_Precourse {
             [new Ayotte_Admin_Panel(), 'render_form_sets_page']
         );
 
+
         // Additional submenus are registered in their respective classes
+
     }
 
     public function render_main_panel() {
