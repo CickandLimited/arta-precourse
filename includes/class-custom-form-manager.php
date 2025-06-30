@@ -307,7 +307,7 @@ class Custom_Form_Manager {
         }
 
         if ($status === 'submitted') {
-            do_action('ayotte_custom_form_submitted', $id, $submission_id);
+            do_action('ayotte_custom_form_submitted', $id, $db->insert_id);
         }
 
         wp_send_json_success();
