@@ -49,6 +49,24 @@ class Ayotte_Precourse {
             'precourse-form-sets',
             [new Ayotte_Admin_Panel(), 'render_form_sets_page']
         );
+
+        add_submenu_page(
+            'ayotte-precourse',
+            'Form DB Settings',
+            'Form DB Settings',
+            'manage_options',
+            'ayotte-form-db-settings',
+            [new Ayotte_Form_DB_Settings(), 'render_page']
+        );
+
+        add_submenu_page(
+            'ayotte-precourse',
+            'Custom Forms',
+            'Custom Forms',
+            'manage_options',
+            'ayotte-custom-forms',
+            [new Custom_Form_Manager(), 'list_forms']
+        );
     }
 
     public function render_main_panel() {
