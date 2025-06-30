@@ -349,11 +349,11 @@ class Custom_Form_Manager {
                     </p>
                 <?php endforeach; ?>
                 <p class="ayotte-nav">
-                    <?php if ($pi > 0): ?><button type="button" class="prev-page">Previous</button><?php endif; ?>
-                    <?php if ($pi < count($pages)-1): ?><button type="button" class="next-page">Next</button><?php endif; ?>
+                    <?php if ($pi > 0): ?><button type="button" class="prev-page button">Previous</button><?php endif; ?>
+                    <?php if ($pi < count($pages)-1): ?><button type="button" class="next-page button">Next</button><?php endif; ?>
                     <?php if ($pi == count($pages)-1): ?>
-                        <button type="button" class="ayotte-save-draft">Save Draft</button>
-                        <button type="submit">Submit</button>
+                        <button type="button" class="ayotte-save-draft button">Save Draft</button>
+                        <button type="submit" class="button">Submit</button>
                     <?php endif; ?>
                 </p>
             </div>

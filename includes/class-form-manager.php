@@ -49,7 +49,7 @@ class Ayotte_Form_Manager {
             <p><label>Phone:<br><input type="text" name="phone" value="<?php echo $phone; ?>"/></label></p>
             <p><label>Photo ID:<br><input type="file" name="id_file" accept="image/*,application/pdf"/></label></p>
             <p><label>Why do you want to join the course?<br><textarea name="reason"><?php echo $reason; ?></textarea></label></p>
-            <button type="submit">Submit</button>
+            <button type="submit" class="button">Submit</button>
             <span id="ayottePrecourseMsg"></span>
         </form>
         <script>
