@@ -77,3 +77,36 @@
     width:100%;
     max-width:500px;
 }
+
+.precourse-form {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.precourse-form .ayotte-nav {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.precourse-form .ayotte-nav .prev-page {
+    margin-right: auto;
+}
+
+.precourse-form .button {
+    background: #a32c2e;
+    color: #fff;
+    text-decoration: none;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.precourse-form .button:hover {
+    opacity: 0.9;
+}
