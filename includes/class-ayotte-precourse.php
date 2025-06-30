@@ -25,11 +25,11 @@ class Ayotte_Precourse {
 
         add_submenu_page(
             'ayotte-precourse',
-            'Debug Console',
-            'Debug Console',
+            'Settings',
+            'Settings',
             'manage_options',
-            'precourse-debug-console',
-            [new Ayotte_Admin_Panel(), 'render_debug_console']
+            'precourse-settings',
+            [new Ayotte_Admin_Panel(), 'render_settings_page']
         );
 
         add_submenu_page(

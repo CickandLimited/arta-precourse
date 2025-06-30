@@ -1,6 +1,13 @@
 <?php
 class Ayotte_Admin_Panel {
 
+    /**
+     * Render plugin settings. Currently this just shows the debug console.
+     */
+    public function render_settings_page() {
+        $this->render_debug_console();
+    }
+
     public function render_debug_console() {
         if (isset($_POST['ayotte_debug_submit']) && check_admin_referer('ayotte_debug_settings')) {
             $enabled  = isset($_POST['ayotte_debug_enabled']);
