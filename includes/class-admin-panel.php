@@ -172,12 +172,6 @@ class Ayotte_Admin_Panel {
                 $forms   = array_values(array_intersect($forms, array_keys($form_options)));
                 update_user_meta($user_id, 'ayotte_assigned_forms', $forms);
 
-                $unlock = $_POST['ayotte_unlock_forms'][$user_id] ?? [];
-                foreach ((array) $unlock as $form_id) {
-                    $form_id = intval($form_id);
-                    delete_user_meta($user_id, "ayotte_form_{$form_id}_status");
-                }
-
                 // Always recalculate progress after updating assignments
                 $tracker->recalculate_progress($user_id);
             }
@@ -191,11 +185,13 @@ class Ayotte_Admin_Panel {
         echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Status</th><th>Forms</th><th>Unlock</th></tr></thead><tbody>';
         foreach ($users as $user) {
             $assigned = (array) get_user_meta($user->ID, 'ayotte_assigned_forms', true);
-            $status_items = [];
-            $changed = false;
+            $status_items    = [];
+            $form_status_map = [];
+            $changed         = false;
 
             foreach ($assigned as $form_id) {
                 $status = $tracker->get_form_status($form_id, $user->ID);
+                $form_status_map[$form_id] = $status;
                 $stored = get_user_meta($user->ID, "ayotte_form_{$form_id}_status", true);
                 if ($status !== $stored) {
                     update_user_meta($user->ID, "ayotte_form_{$form_id}_status", $status);
@@ -261,18 +257,43 @@ class Ayotte_Admin_Panel {
             }
             echo '</ul></td>';
 
-            echo '<td><ul class="form-unlock-list">';
+            $buttons = '';
             foreach ($assigned as $id) {
-                $name = $form_options[$id] ?? Ayotte_Progress_Tracker::get_form_name($id);
-                echo '<li><label><input type="checkbox" name="ayotte_unlock_forms[' . intval($user->ID) . '][]" value="' . esc_attr($id) . '"> ' . esc_html($name) . '</label></li>';
+                if (($form_status_map[$id] ?? '') === 'locked') {
+                    $name = $form_options[$id] ?? Ayotte_Progress_Tracker::get_form_name($id);
+                    $buttons .= '<li>' . esc_html($name) .
+                        ' <button type="button" class="ayotte-unlock-btn" data-user="' . intval($user->ID) . '" data-form="' . esc_attr($id) . '">Unlock</button> '
+                        . '<span class="unlock-msg"></span></li>';
+                }
             }
-            echo '</ul></td>';
+            echo '<td><ul class="form-unlock-list">' . $buttons . '</ul></td>';
 
             echo '</tr>';
         }
         echo '</tbody></table>';
         echo '<p><button type="submit" class="button button-primary">Save Assignments</button></p>';
         echo '</form></div>';
+        ?>
+        <script>
+        document.querySelectorAll('.ayotte-unlock-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const user = btn.dataset.user;
+                const form = btn.dataset.form;
+                const res = await fetch(ajaxurl + '?action=ayotte_unlock_form', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: user, form_id: form })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    btn.nextElementSibling.textContent = 'Form unlocked';
+                } else {
+                    btn.nextElementSibling.textContent = data.data.message || 'Error';
+                }
+            });
+        });
+        </script>
+        <?php
     }
 
     /**
@@ -310,6 +331,7 @@ class Ayotte_Admin_Panel {
         add_action('wp_ajax_ayotte_send_test_invite', [$this, 'send_test_invite']);
         add_action('wp_ajax_ayotte_send_invite_email', [$this, 'send_invite_email']);
         add_action('wp_ajax_ayotte_send_bulk_invites', [$this, 'send_bulk_invites']);
+        add_action('wp_ajax_ayotte_unlock_form', [$this, 'unlock_form']);
         add_action('wp_ajax_ayotte_debug_execute', [$this, 'debug_execute']);
     }
 
@@ -377,6 +399,35 @@ class Ayotte_Admin_Panel {
         }
         ayotte_log_message('INFO', "Sent {$count} invitations", 'admin panel');
         wp_send_json_success(['message' => "Sent $count invitations"]);
+    }
+
+    /**
+     * Unlock a previously locked form for a user.
+     */
+    public function unlock_form() {
+        if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Forbidden'], 403);
+
+        $body    = json_decode(file_get_contents('php://input'), true);
+        $user_id = intval($body['user_id'] ?? 0);
+        $form_id = intval($body['form_id'] ?? 0);
+        if (!$user_id || !$form_id) {
+            wp_send_json_error(['message' => 'Invalid parameters']);
+        }
+
+        update_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", 1);
+
+        $db = Custom_DB::get_instance()->get_connection();
+        if (!$db instanceof WP_Error) {
+            $res = $db->query("SELECT id FROM custom_form_submissions WHERE form_id=$form_id AND user_id=$user_id ORDER BY submitted_at DESC LIMIT 1");
+            if ($res && $res->num_rows) {
+                $row = $res->fetch_assoc();
+                $sid = intval($row['id']);
+                $db->query("UPDATE custom_form_submissions SET locked=0 WHERE id=$sid");
+            }
+        }
+
+        ayotte_log_message('INFO', "Form {$form_id} unlocked for user {$user_id}", 'admin panel');
+        wp_send_json_success(['message' => 'Form unlocked']);
     }
 
     /**
