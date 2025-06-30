@@ -27,7 +27,7 @@ class Ayotte_Form_Manager {
             $status   = get_user_meta($user_id, "ayotte_form_{$form_id}_status", true);
             $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
 
-            if ($status === 'completed' && !$unlocked) {
+            if (in_array($status, ['completed', 'locked'], true) && !$unlocked) {
                 return $this->render_readonly_submission($form_id, $user_id);
             }
 
@@ -115,9 +115,12 @@ class Ayotte_Form_Manager {
 
                 $name = Ayotte_Progress_Tracker::get_form_name($form_id);
 
-                $submitted = ($status === 'completed');
-                $locked    = $submitted && !$unlocked;
+                $submitted = in_array($status, ['completed', 'locked'], true);
+                $locked    = ($status === 'locked') && !$unlocked;
                 switch ($status) {
+                    case 'locked':
+                        $status_label = 'Locked';
+                        break;
                     case 'completed':
                         $status_label = 'Completed';
                         break;

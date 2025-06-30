@@ -342,6 +342,11 @@ class Custom_Form_Manager {
             do_action('ayotte_custom_form_submitted', $id, $db->insert_id);
         }
 
+        $tracker = new Ayotte_Progress_Tracker();
+        $state   = $locked ? 'locked' : (($status === 'draft') ? 'draft' : 'completed');
+        update_user_meta($user_id, "ayotte_form_{$id}_status", $state);
+        $tracker->recalculate_progress($user_id);
+
         wp_send_json_success();
     }
 }
