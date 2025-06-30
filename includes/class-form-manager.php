@@ -113,11 +113,7 @@ class Ayotte_Form_Manager {
                 $status   = $status_map[$form_id] ?? $tracker->get_form_status($form_id, $user_id);
                 $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
 
-                $name = 'Form ' . $form_id;
-                $form = Ayotte_Progress_Tracker::forminator_get_form($form_id);
-                if ($form && !is_wp_error($form)) {
-                    $name = $form->name;
-                }
+                $name = Ayotte_Progress_Tracker::get_form_name($form_id);
 
                 $submitted = ($status === 'completed');
                 $locked    = $submitted && !$unlocked;
