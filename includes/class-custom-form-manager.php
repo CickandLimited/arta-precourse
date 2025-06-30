@@ -263,13 +263,14 @@ class Custom_Form_Manager {
         <script>
         (function(){
             const form = document.getElementById('ayotteCustomForm<?php echo $id; ?>');
+            const dashboardUrl = '<?php echo esc_js(site_url('/precourse-forms')); ?>';
             form.onsubmit = function(e){
                 e.preventDefault();
                 const data = new FormData(form);
                 fetch(ajaxurl+"?action=ayotte_custom_form_submit",{method:'POST',body:data})
                     .then(r=>r.json()).then(res=>{
                         form.querySelector('.ayotte-custom-result').textContent=res.success?'Saved':'Error';
-                        if(res.success) form.reset();
+                        if(res.success) window.location.href = dashboardUrl;
                     });
             };
             form.querySelector('.ayotte-save-draft').addEventListener('click', function(e){
@@ -278,6 +279,7 @@ class Custom_Form_Manager {
                 fetch(ajaxurl+"?action=ayotte_custom_form_save_draft",{method:'POST',body:data})
                     .then(r=>r.json()).then(res=>{
                         form.querySelector('.ayotte-custom-result').textContent=res.success?'Draft saved':'Error';
+                        if(res.success) window.location.href = dashboardUrl;
                     });
             });
         })();
