@@ -17,7 +17,7 @@ class Ayotte_Form_Manager {
         $user_id = get_current_user_id();
         $form_id = intval($atts['id'] ?? ($_GET['form_id'] ?? 0));
 
-        // If a Forminator form ID is provided, display that form
+        // If a form ID is provided, display a custom form
         if ($form_id) {
             $assigned = (array) get_user_meta($user_id, 'ayotte_assigned_forms', true);
             if (!in_array($form_id, $assigned, true)) {
@@ -31,7 +31,7 @@ class Ayotte_Form_Manager {
                 return $this->render_readonly_submission($form_id, $user_id);
             }
 
-            return do_shortcode('[forminator_form id="' . $form_id . '"]');
+            return do_shortcode('[ayotte_custom_form id="' . $form_id . '"]');
         }
 
         // Legacy precourse form
@@ -164,52 +164,35 @@ class Ayotte_Form_Manager {
      * Fetch a user submission and render it in read-only mode.
      */
     private function render_readonly_submission($form_id, $user_id) {
-        if (!class_exists('Forminator_API')) {
+        $db = Custom_DB::get_instance()->get_connection();
+        if ($db instanceof WP_Error) {
             return '<p>Form submitted.</p>';
         }
 
-        $email   = wp_get_current_user()->user_email;
-
-        // Fetch entries for this form using the wrapper so we get entry objects
-        // back. The pagination defaults avoid passing search criteria as the
-        // second parameter.
-        $entries = Ayotte_Progress_Tracker::forminator_get_entries($form_id, 0, 1);
-
-        $entry   = null;
-
-        if ($entries && !empty($entries->entries)) {
-            foreach ($entries->entries as $e) {
-                if (!isset($e->meta_data) || !is_array($e->meta_data)) {
-                    continue;
-                }
-                foreach ($e->meta_data as $field => $meta) {
-                    $value = $meta['value'] ?? ($meta->value ?? '');
-                    if ($field === 'hidden-1' && $value === $email) {
-                        $entry = $e;
-                        break 2;
-                    }
-                }
-            }
+        $fields_res = $db->query("SELECT id,label FROM custom_form_fields WHERE form_id=" . intval($form_id));
+        $labels = [];
+        while ($fields_res && ($row = $fields_res->fetch_assoc())) {
+            $labels['field_' . intval($row['id'])] = $row['label'];
         }
 
-        if (!$entry) {
+        $sub_res = $db->query(
+            "SELECT data FROM custom_form_submissions WHERE form_id=" . intval($form_id) .
+            " ORDER BY submitted_at DESC LIMIT 1"
+        );
+
+        if (!$sub_res || !$sub_res->num_rows) {
             return '<p>Form submitted.</p>';
         }
 
-        $fields = [];
-        if (isset($entry->meta_data) && is_array($entry->meta_data)) {
-            foreach ($entry->meta_data as $field => $meta) {
-                $value = $meta['value'] ?? ($meta->value ?? '');
-                $fields[$field] = $value;
-            }
-        }
-
-        if (!$fields) {
+        $sub_row = $sub_res->fetch_assoc();
+        $data = json_decode($sub_row['data'] ?? '', true);
+        if (!is_array($data) || !$data) {
             return '<p>Form submitted.</p>';
         }
 
         $html = '<div class="ayotte-readonly-form"><table class="widefat">';
-        foreach ($fields as $label => $value) {
+        foreach ($data as $key => $value) {
+            $label = $labels[$key] ?? $key;
             $html .= '<tr><th>' . esc_html($label) . '</th><td>' . esc_html($value) . '</td></tr>';
         }
         $html .= '</table></div>';
