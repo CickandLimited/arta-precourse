@@ -1,7 +1,19 @@
 {
-  "name": "ayotte/arta",
-  "description": "Placeholder to satisfy Hostinger deployment checks",
-  "require": {
-    "mpdf/mpdf": "^8.0"
-  }
+    "name": "cickand/arta-precourse-portal",
+    "description": "precourse portal to allow students to submit data and fill forms or other precourse workbooks for training courses",
+    "type": "project",
+    "require": {
+        "mpdf/mpdf": "^6.1"
+    },
+    "license": "GPL",
+    "autoload": {
+        "psr-4": {
+            "Cickand\\ArtaPrecoursePortal\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Kris Rabai"
+        }
+    ]
 }
