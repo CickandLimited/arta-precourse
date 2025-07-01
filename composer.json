@@ -1,5 +1,7 @@
 {
   "name": "ayotte/arta",
   "description": "Placeholder to satisfy Hostinger deployment checks",
-  "require": {}
+  "require": {
+    "mpdf/mpdf": "^8.0"
+  }
 }

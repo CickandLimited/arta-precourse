@@ -191,7 +191,7 @@ class Ayotte_Admin_Panel {
 
         echo '<div class="wrap ayotte-admin-panel"><h1>Student Progress</h1><form method="post">';
         wp_nonce_field('ayotte_assign_forms');
-        echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>Status</th><th>Forms</th><th>Unlock</th></tr></thead><tbody>';
+        echo '<table class="widefat"><thead><tr><th>Email</th><th>Progress</th><th>PDF</th><th>Status</th><th>Forms</th><th>Unlock</th></tr></thead><tbody>';
         foreach ($users as $user) {
             $assigned = (array) get_user_meta($user->ID, 'ayotte_assigned_forms', true);
             $status_items    = [];
@@ -263,6 +263,11 @@ class Ayotte_Admin_Panel {
                  . esc_html($progress_display)
                  . '<div class="ayotte-progress-bar"><div class="ayotte-progress-fill ' . $progress_class . '" style="width:' . $progress_val . '%"></div></div>'
                  . '</td>';
+            echo '<td class="pdf-cell">';
+            if ($progress_val == 100) {
+                echo '<button type="button" class="ayotte-generate-pdf" data-user="' . intval($user->ID) . '">Generate PDF</button> <span class="pdf-msg"></span>';
+            }
+            echo '</td>';
             echo '<td><ul class="status-list">' . implode('', $status_items) . '</ul></td>';
             echo '<td><ul class="form-checkbox-list">';
             foreach ($form_options as $id => $name) {
@@ -308,6 +313,22 @@ class Ayotte_Admin_Panel {
                     btn.nextElementSibling.textContent = 'Form unlocked';
                 } else {
                     btn.nextElementSibling.textContent = data.data.message || 'Error';
+                }
+            });
+        });
+        document.querySelectorAll('.ayotte-generate-pdf').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const user = btn.dataset.user;
+                btn.disabled = true;
+                const span = btn.nextElementSibling;
+                span.textContent = 'Generating...';
+                const res = await fetch(ajaxurl + '?action=ayotte_generate_pdf&user_id=' + user);
+                const data = await res.json();
+                btn.disabled = false;
+                if (data.success) {
+                    span.innerHTML = '<a href="' + data.data.url + '" target="_blank">Download</a>';
+                } else {
+                    span.textContent = data.data.message || 'Error';
                 }
             });
         });
@@ -378,6 +399,7 @@ class Ayotte_Admin_Panel {
         add_action('wp_ajax_ayotte_send_bulk_invites', [$this, 'send_bulk_invites']);
         add_action('wp_ajax_ayotte_unlock_form', [$this, 'unlock_form']);
         add_action('wp_ajax_ayotte_request_unlock', [$this, 'request_unlock']);
+        add_action('wp_ajax_ayotte_generate_pdf', [$this, 'generate_pdf']);
         add_action('wp_ajax_ayotte_debug_execute', [$this, 'debug_execute']);
     }
 
@@ -509,6 +531,24 @@ class Ayotte_Admin_Panel {
 
         ayotte_log_message('INFO', "Form {$form_id} unlocked for user {$user_id}", 'admin panel');
         wp_send_json_success(['message' => 'Form unlocked']);
+    }
+
+    /**
+     * Generate a PDF of all submissions for a user.
+     */
+    public function generate_pdf() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Forbidden'], 403);
+        }
+        $user_id = intval($_GET['user_id'] ?? 0);
+        if (!$user_id) {
+            wp_send_json_error(['message' => 'Invalid user']);
+        }
+        $url = Ayotte_PDF_Generator::create_user_pdf($user_id);
+        if ($url instanceof WP_Error) {
+            wp_send_json_error(['message' => $url->get_error_message()]);
+        }
+        wp_send_json_success(['url' => $url]);
     }
 
     /**
