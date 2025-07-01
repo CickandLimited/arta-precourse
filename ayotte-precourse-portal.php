@@ -20,6 +20,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-progress-tracker.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-custom-db.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-form-db-settings.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-custom-form-manager.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-pdf-generator.php';
 
 // Enqueue styles for admin pages and frontend dashboard
 function ayotte_precourse_enqueue_admin($hook) {
