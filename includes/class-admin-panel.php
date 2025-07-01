@@ -316,36 +316,6 @@ class Ayotte_Admin_Panel {
                 }
             });
         });
-        document.querySelectorAll('.ayotte-generate-pdf').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const user = btn.dataset.user;
-                btn.disabled = true;
-                const span = btn.nextElementSibling;
-                span.textContent = 'Generating...';
-                let data;
-                try {
-                    const res = await fetch(ajaxurl + '?action=ayotte_generate_pdf&user_id=' + user);
-                    data = await res.json();
-                } catch (err) {
-                    span.textContent = 'Error generating PDF';
-                    return;
-                } finally {
-                    btn.disabled = false;
-                }
-                if (data.success) {
-                    const tmp = document.createElement('a');
-                    tmp.href = data.data.url;
-                    tmp.download = '';
-                    tmp.style.display = 'none';
-                    document.body.appendChild(tmp);
-                    tmp.click();
-                    document.body.removeChild(tmp);
-                    span.innerHTML = '<a href="' + data.data.url + '" target="_blank" download>Download</a>';
-                } else {
-                    span.textContent = data.data.message || 'Error';
-                }
-            });
-        });
         </script>
         <?php
     }
@@ -414,6 +384,7 @@ class Ayotte_Admin_Panel {
         add_action('wp_ajax_ayotte_unlock_form', [$this, 'unlock_form']);
         add_action('wp_ajax_ayotte_request_unlock', [$this, 'request_unlock']);
         add_action('wp_ajax_ayotte_generate_pdf', [$this, 'generate_pdf']);
+        add_action('wp_ajax_ayotte_prepare_pdf',  [$this, 'prepare_pdf']);
         add_action('wp_ajax_ayotte_debug_execute', [$this, 'debug_execute']);
     }
 
@@ -554,15 +525,32 @@ class Ayotte_Admin_Panel {
         if (!current_user_can('manage_options')) {
             wp_send_json_error(['message' => 'Forbidden'], 403);
         }
-        $user_id = intval($_GET['user_id'] ?? 0);
+        $body = [];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $body = json_decode(file_get_contents('php://input'), true) ?: [];
+        }
+        $user_id = intval($body['user_id'] ?? ($_GET['user_id'] ?? 0));
         if (!$user_id) {
             wp_send_json_error(['message' => 'Invalid user']);
         }
-        $url = Ayotte_PDF_Generator::create_user_pdf($user_id);
+        $transforms = $body['transforms'] ?? [];
+        $url = Ayotte_PDF_Generator::create_user_pdf($user_id, $transforms);
         if ($url instanceof WP_Error) {
             wp_send_json_error(['message' => $url->get_error_message()]);
         }
         wp_send_json_success(['url' => $url]);
+    }
+
+    public function prepare_pdf() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Forbidden'], 403);
+        }
+        $user_id = intval($_GET['user_id'] ?? 0);
+        if (!$user_id) {
+            wp_send_json_error(['message' => 'Invalid user']);
+        }
+        $html = Ayotte_PDF_Generator::build_user_html($user_id, [], true);
+        wp_send_json_success(['html' => $html]);
     }
 
     /**

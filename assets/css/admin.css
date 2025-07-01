@@ -65,3 +65,7 @@
 .ayotte-progress-fill.completed   { background: #2ecc71; }
 
 .ayotte-static-editor{width:100%;max-width:500px;}
+.ayotte-pdf-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:10000;}
+.ayotte-pdf-dialog{background:#fff;padding:20px;max-height:90%;overflow:auto;max-width:90%;}
+.ayotte-pdf-preview img{max-width:100%;display:block;}
+.ayotte-pdf-preview input[type=range]{width:100%;}
