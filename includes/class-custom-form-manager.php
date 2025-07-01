@@ -413,9 +413,12 @@ class Custom_Form_Manager {
         </form>
         </div>
         <script>
-        document.addEventListener('DOMContentLoaded', function(){
-            const form = document.getElementById('ayotteCustomForm<?php echo $id; ?>');
-            if(!form) return;
+
+        (function(){
+            function init(){
+                const form = document.getElementById('ayotteCustomForm<?php echo $id; ?>');
+                if(!form) return;
+
             const pages = form.querySelectorAll('.ayotte-form-page');
             let page = <?php echo $current_page; ?>;
             const dashboardUrl = '<?php echo esc_js(site_url('/precourse-forms')); ?>';
@@ -528,7 +531,12 @@ class Custom_Form_Manager {
             }));
             show(page);
             checkConditions();
-        });
+
+        }
+        if(document.readyState!=='loading') init();
+        else document.addEventListener('DOMContentLoaded', init);
+        })();
+
         </script>
         <?php
         return ob_get_clean();
