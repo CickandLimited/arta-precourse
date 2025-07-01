@@ -40,6 +40,25 @@ function ayotte_precourse_enqueue_admin($hook) {
         [],
         AYOTTE_PRECOURSE_VERSION
     );
+    wp_enqueue_script(
+        'interactjs',
+        'https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js',
+        [],
+        AYOTTE_PRECOURSE_VERSION,
+        true
+    );
+    wp_enqueue_script(
+        'ayotte-pdf-preview',
+        plugin_dir_url(__FILE__) . 'assets/js/pdf-preview.js',
+        ['interactjs'],
+        AYOTTE_PRECOURSE_VERSION,
+        true
+    );
+    wp_add_inline_script(
+        'ayotte-pdf-preview',
+        'var ajaxurl = ' . json_encode(admin_url('admin-ajax.php')) . ';',
+        'before'
+    );
 }
 add_action('admin_enqueue_scripts', 'ayotte_precourse_enqueue_admin');
 
