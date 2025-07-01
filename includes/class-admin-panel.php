@@ -333,7 +333,14 @@ class Ayotte_Admin_Panel {
                     btn.disabled = false;
                 }
                 if (data.success) {
-                    span.innerHTML = '<a href="' + data.data.url + '" target="_blank">Download</a>';
+                    const tmp = document.createElement('a');
+                    tmp.href = data.data.url;
+                    tmp.download = '';
+                    tmp.style.display = 'none';
+                    document.body.appendChild(tmp);
+                    tmp.click();
+                    document.body.removeChild(tmp);
+                    span.innerHTML = '<a href="' + data.data.url + '" target="_blank" download>Download</a>';
                 } else {
                     span.textContent = data.data.message || 'Error';
                 }
