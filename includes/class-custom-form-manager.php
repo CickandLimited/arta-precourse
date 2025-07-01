@@ -104,11 +104,12 @@ class Custom_Form_Manager {
                 $id = $db->insert_id;
             }
 
-            $labels   = $_POST['field_label'] ?? [];
-            $types    = $_POST['field_type'] ?? [];
-            $texts    = $_POST['field_text'] ?? [];
-            $opts_in  = $_POST['field_options'] ?? [];
-            $required = $_POST['field_required'] ?? [];
+            $labels     = $_POST['field_label'] ?? [];
+            $types      = $_POST['field_type'] ?? [];
+            $texts      = $_POST['field_text'] ?? [];
+            $opts_in    = $_POST['field_options'] ?? [];
+            $conds_in   = $_POST['field_conditions'] ?? [];
+            $required   = $_POST['field_required'] ?? [];
             foreach ($labels as $idx => $label) {
                 $label = sanitize_text_field($label);
                 $type  = sanitize_text_field($types[$idx] ?? 'text');
@@ -121,10 +122,11 @@ class Custom_Form_Manager {
                 } else {
                     $value = '';
                 }
+                $cond  = sanitize_text_field($conds_in[$idx] ?? '');
                 $req   = in_array($idx, $required) ? 1 : 0;
                 $db->query(
-                    "INSERT INTO custom_form_fields (form_id,label,type,options,required) VALUES (".
-                    "$id, '".$db->real_escape_string($label)."', '".$db->real_escape_string($type)."', '".$db->real_escape_string($value)."', $req)"
+                    "INSERT INTO custom_form_fields (form_id,label,type,options,required,conditions) VALUES (".
+                    "$id, '".$db->real_escape_string($label)."', '".$db->real_escape_string($type)."', '".$db->real_escape_string($value)."', $req, '".$db->real_escape_string($cond)."')"
                 );
             }
             echo '<div class="updated"><p>Form saved.</p></div>';
@@ -138,7 +140,7 @@ class Custom_Form_Manager {
                 <?php wp_nonce_field('ayotte_custom_form', 'ayotte_custom_form_nonce'); ?>
                 <p><label>Name<br><input type="text" name="form_name" value="<?php echo esc_attr($name); ?>" class="regular-text"></label></p>
                 <table class="widefat" id="ayotte-form-fields">
-                    <thead><tr><th>Label</th><th>Type</th><th>Text</th><th>Options</th><th>Required</th><th></th></tr></thead>
+                    <thead><tr><th>Label</th><th>Type</th><th>Text</th><th>Options</th><th>Conditions</th><th>Required</th><th></th></tr></thead>
                     <tbody>
                         <?php foreach ($fields as $idx => $f) : ?>
                         <tr>
@@ -189,6 +191,7 @@ class Custom_Form_Manager {
                                 }
                                 ?>
                             </td>
+                            <td class="conditions-cell"><input type="text" name="field_conditions[]" value="<?php echo esc_attr($f['conditions']); ?>"></td>
                             <td><input type="checkbox" name="field_required[]" value="<?php echo $idx; ?>" <?php checked($f['required'],1); ?>></td>
                             <td><button type="button" class="remove button">Remove</button></td>
                         </tr>
@@ -219,6 +222,7 @@ class Custom_Form_Manager {
                     `</select></td>`+
                     `<td class="text-cell"><input type="hidden" name="field_text[]"></td>`+
                     `<td class="options-cell"><input type="hidden" name="field_options[]"></td>`+
+                    `<td class="conditions-cell"><input type="text" name="field_conditions[]"></td>`+
                     `<td><input type="checkbox" name="field_required[]" value=""></td>`+
                     `<td><button type="button" class="remove button">Remove</button></td>`;
                 table.appendChild(row);
@@ -336,7 +340,7 @@ class Custom_Form_Manager {
             <div class="ayotte-form-page" data-page="<?php echo $pi; ?>" style="<?php echo $pi==$current_page?'':'display:none'; ?>">
                 <?php foreach ($pfields as $f): ?>
                     <?php $name = 'field_'.$f['id']; ?>
-                    <p>
+                    <p<?php echo $f['conditions'] ? ' data-conditions="'.esc_attr($f['conditions']).'"' : ''; ?>>
                         <label><?php echo esc_html($f['label']); ?><br>
                         <?php
                             $val = $values[$name] ?? '';
@@ -402,14 +406,43 @@ class Custom_Form_Manager {
             const pages = form.querySelectorAll('.ayotte-form-page');
             let page = <?php echo $current_page; ?>;
             const dashboardUrl = '<?php echo esc_js(site_url('/precourse-forms')); ?>';
+            function checkConditions(){
+                form.querySelectorAll('[data-conditions]').forEach(el=>{
+                    const str = el.getAttribute('data-conditions');
+                    if(!str) return;
+                    try{
+                        const cond = JSON.parse(str);
+                        const name = 'field_'+cond.target_field;
+                        let val = '';
+                        if(form.querySelectorAll('[name="'+name+'[]"]').length){
+                            val = Array.from(form.querySelectorAll('input[name="'+name+'[]"]:checked')).map(i=>i.value).join(',');
+                        }else if(form.querySelectorAll('input[name="'+name+'"]').length){
+                            const chk = form.querySelector('input[name="'+name+'"]:checked');
+                            val = chk?chk.value:'';
+                        }else{
+                            const f = form.querySelector('[name="'+name+'"]');
+                            if(f) val = f.value;
+                        }
+                        el.style.display = (val==cond.value)?'':'none';
+                    }catch(e){
+                        el.style.display='';
+                    }
+                });
+            }
             function show(i){
                 pages.forEach((p,idx)=>{p.style.display = idx===i ? '' : 'none';});
                 page = i;
                 form.querySelector('[name="current_page"]').value = i;
+                checkConditions();
             }
             form.addEventListener('click',e=>{
-                if(e.target.classList.contains('next-page')){e.preventDefault(); if(page < pages.length-1) show(page+1);} 
-                if(e.target.classList.contains('prev-page')){e.preventDefault(); if(page>0) show(page-1);} 
+                if(e.target.classList.contains('next-page')){e.preventDefault(); if(page < pages.length-1) show(page+1);}
+                if(e.target.classList.contains('prev-page')){e.preventDefault(); if(page>0) show(page-1);}
+            });
+            form.addEventListener('change',e=>{
+                if(e.target.matches('select, input[type=checkbox], input[type=radio]')){
+                    checkConditions();
+                }
             });
             form.onsubmit = function(e){
                 e.preventDefault();
@@ -430,6 +463,7 @@ class Custom_Form_Manager {
                     });
             }));
             show(page);
+            checkConditions();
         })();
         </script>
         <?php
