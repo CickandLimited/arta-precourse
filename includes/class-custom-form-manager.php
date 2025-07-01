@@ -109,6 +109,7 @@ class Custom_Form_Manager {
             $texts      = $_POST['field_text'] ?? [];
             $opts_in    = $_POST['field_options'] ?? [];
             $conds_in   = $_POST['field_conditions'] ?? [];
+            $valid_in   = $_POST['field_validation'] ?? [];
             $required   = $_POST['field_required'] ?? [];
             foreach ($labels as $idx => $label) {
                 $label = sanitize_text_field($label);
@@ -123,10 +124,11 @@ class Custom_Form_Manager {
                     $value = '';
                 }
                 $cond  = sanitize_text_field($conds_in[$idx] ?? '');
+                $valid = sanitize_text_field($valid_in[$idx] ?? '');
                 $req   = in_array($idx, $required) ? 1 : 0;
                 $db->query(
-                    "INSERT INTO custom_form_fields (form_id,label,type,options,required,conditions) VALUES (".
-                    "$id, '".$db->real_escape_string($label)."', '".$db->real_escape_string($type)."', '".$db->real_escape_string($value)."', $req, '".$db->real_escape_string($cond)."')"
+                    "INSERT INTO custom_form_fields (form_id,label,type,options,required,conditions,validation_rules) VALUES (".
+                    "$id, '".$db->real_escape_string($label)."', '".$db->real_escape_string($type)."', '".$db->real_escape_string($value)."', $req, '".$db->real_escape_string($cond)."', '".$db->real_escape_string($valid)."')"
                 );
             }
             echo '<div class="updated"><p>Form saved.</p></div>';
@@ -140,7 +142,7 @@ class Custom_Form_Manager {
                 <?php wp_nonce_field('ayotte_custom_form', 'ayotte_custom_form_nonce'); ?>
                 <p><label>Name<br><input type="text" name="form_name" value="<?php echo esc_attr($name); ?>" class="regular-text"></label></p>
                 <table class="widefat" id="ayotte-form-fields">
-                    <thead><tr><th>Label</th><th>Type</th><th>Text</th><th>Options</th><th>Conditions</th><th>Required</th><th></th></tr></thead>
+                    <thead><tr><th>Label</th><th>Type</th><th>Text</th><th>Options</th><th>Conditions</th><th>Validation</th><th>Required</th><th></th></tr></thead>
                     <tbody>
                         <?php foreach ($fields as $idx => $f) : ?>
                         <tr>
@@ -192,6 +194,7 @@ class Custom_Form_Manager {
                                 ?>
                             </td>
                             <td class="conditions-cell"><input type="text" name="field_conditions[]" value="<?php echo esc_attr($f['conditions']); ?>"></td>
+                            <td class="validation-cell"><input type="text" name="field_validation[]" value="<?php echo esc_attr($f['validation_rules']); ?>"></td>
                             <td><input type="checkbox" name="field_required[]" value="<?php echo $idx; ?>" <?php checked($f['required'],1); ?>></td>
                             <td><button type="button" class="remove button">Remove</button></td>
                         </tr>
@@ -223,6 +226,7 @@ class Custom_Form_Manager {
                     `<td class="text-cell"><input type="hidden" name="field_text[]"></td>`+
                     `<td class="options-cell"><input type="hidden" name="field_options[]"></td>`+
                     `<td class="conditions-cell"><input type="text" name="field_conditions[]"></td>`+
+                    `<td class="validation-cell"><input type="text" name="field_validation[]"></td>`+
                     `<td><input type="checkbox" name="field_required[]" value=""></td>`+
                     `<td><button type="button" class="remove button">Remove</button></td>`;
                 table.appendChild(row);
@@ -343,17 +347,24 @@ class Custom_Form_Manager {
                     <p<?php echo $f['conditions'] ? ' data-conditions="'.esc_attr($f['conditions']).'"' : ''; ?>>
                         <label><?php echo esc_html($f['label']); ?><br>
                         <?php
-                            $val = $values[$name] ?? '';
-                            $req = $f['required'] ? ' required' : '';
+                            $val  = $values[$name] ?? '';
+                            $req  = $f['required'] ? ' required' : '';
+                            $rules_attr = $f['validation_rules'] ? ' data-validate="' . esc_attr($f['validation_rules']) . '"' : '';
+                            $accept = '';
+                            if ($f['validation_rules'] && preg_match('/ext:([a-zA-Z0-9,]+)/', $f['validation_rules'], $m)) {
+                                $exts = array_map('trim', explode(',', $m[1]));
+                                $exts = array_map('sanitize_key', $exts);
+                                $accept = ' accept=".' . implode(',.', $exts) . '"';
+                            }
                             switch($f['type']) {
                                 case 'textarea':
-                                    echo '<textarea name="'.$name.'"'.$req.'>'.esc_textarea($val).'</textarea>'; break;
+                                    echo '<textarea name="'.$name.'"'.$req.$rules_attr.'>'.esc_textarea($val).'</textarea>'; break;
                                 case 'date':
-                                    echo '<input type="date" name="'.$name.'" value="'.esc_attr($val).'"'.$req.'>'; break;
+                                    echo '<input type="date" name="'.$name.'" value="'.esc_attr($val).'"'.$req.$rules_attr.'>'; break;
                                 case 'static':
                                     echo '<span>'.wp_kses_post($f['options']).'</span>'; break;
                                 case 'file':
-                                    echo '<input type="file" name="'.$name.'"'.$req.'>';
+                                    echo '<input type="file" name="'.$name.'"'.$req.$rules_attr.$accept.'>';
                                     if (!empty($val)) echo '<br><em>Current: <a href="'.esc_url($val).'" target="_blank">View</a></em>';
                                     break;
                                 case 'checkbox':
@@ -361,12 +372,12 @@ class Custom_Form_Manager {
                                     $selected = $val ? explode(',', $val) : [];
                                     foreach ($opts as $o) {
                                         $checked = in_array($o, $selected) ? 'checked' : '';
-                                        echo '<label><input type="checkbox" name="'.$name.'[]" value="'.esc_attr($o).'" '.$checked.$req.'> '.esc_html($o).'</label> ';
+                                        echo '<label><input type="checkbox" name="'.$name.'[]" value="'.esc_attr($o).'" '.$checked.$req.$rules_attr.'> '.esc_html($o).'</label> ';
                                     }
                                     break;
                                 case 'select':
                                     $opts = array_map('trim', explode(',', $f['options']));
-                                    echo '<select name="'.$name.'"'.$req.'>'; 
+                                    echo '<select name="'.$name.'"'.$req.$rules_attr.'>';
                                     foreach ($opts as $o) {
                                         $sel = ($o === $val) ? 'selected' : '';
                                         echo '<option value="'.esc_attr($o).'" '.$sel.'>'.esc_html($o).'</option>';
@@ -377,14 +388,15 @@ class Custom_Form_Manager {
                                     $opts = array_map('trim', explode(',', $f['options']));
                                     foreach ($opts as $o) {
                                         $checked = ($o === $val) ? 'checked' : '';
-                                        echo '<label><input type="radio" name="'.$name.'" value="'.esc_attr($o).'" '.$checked.$req.'> '.esc_html($o).'</label> ';
+                                        echo '<label><input type="radio" name="'.$name.'" value="'.esc_attr($o).'" '.$checked.$req.$rules_attr.'> '.esc_html($o).'</label> ';
                                     }
                                     break;
                                 default:
-                                    echo '<input type="text" name="'.$name.'" value="'.esc_attr($val).'"'.$req.'>';
+                                    echo '<input type="text" name="'.$name.'" value="'.esc_attr($val).'"'.$req.$rules_attr.'>';
                             }
                         ?>
                         </label>
+                        <span class="field-error" style="color:#a32c2e"></span>
                     </p>
                 <?php endforeach; ?>
                 <p class="ayotte-nav">
@@ -444,12 +456,62 @@ class Custom_Form_Manager {
                     checkConditions();
                 }
             });
+            function parseRules(str){
+                const out={};
+                str.split(';').forEach(p=>{
+                    p=p.trim();
+                    if(!p) return;
+                    if(p==='text-only') out.textOnly=true;
+                    else if(p==='numbers-only') out.numbersOnly=true;
+                    else if(p.startsWith('min:')) out.min=parseInt(p.slice(4));
+                    else if(p.startsWith('max:')) out.max=parseInt(p.slice(4));
+                    else if(p.startsWith('ext:')) out.ext=p.slice(4).split(',').map(s=>s.trim().toLowerCase());
+                    else if(p.startsWith('minage:')) out.minage=parseInt(p.slice(7));
+                });
+                return out;
+            }
+            function validateField(el){
+                if(!el.dataset.validate) return '';
+                const r=parseRules(el.dataset.validate);
+                let val=el.value||'';
+                if(el.type==='file'){
+                    if(el.files.length && r.ext){
+                        const ext=el.files[0].name.split('.').pop().toLowerCase();
+                        if(!r.ext.includes(ext)) return 'Invalid file type';
+                    }
+                    return '';
+                }
+                if(r.textOnly && /[^a-zA-Z\s]/.test(val)) return 'Text only';
+                if(r.numbersOnly && /[^0-9]/.test(val)) return 'Numbers only';
+                if(r.min && val.length<r.min) return 'Min length '+r.min;
+                if(r.max && val.length>r.max) return 'Max length '+r.max;
+                if(r.minage){
+                    const age=Math.floor((Date.now()-new Date(val).getTime())/31557600000);
+                    if(!isNaN(age) && age<r.minage) return 'Must be at least '+r.minage;
+                }
+                return '';
+            }
+            function runValidation(){
+                let ok=true;
+                form.querySelectorAll('.field-error').forEach(e=>e.textContent='');
+                form.querySelectorAll('[data-validate]').forEach(el=>{
+                    const msg=validateField(el);
+                    if(msg){
+                        ok=false;
+                        let err=el.closest('p').querySelector('.field-error');
+                        if(err) err.textContent=msg;
+                    }
+                });
+                return ok;
+            }
             form.onsubmit = function(e){
                 e.preventDefault();
+                if(!runValidation()) return;
                 const data = new FormData(form);
                 fetch(ajaxurl+"?action=ayotte_custom_form_submit",{method:'POST',body:data})
                     .then(r=>r.json()).then(res=>{
-                        form.querySelector('.ayotte-custom-result').textContent=res.success?'Saved':'Error';
+                        const msg = res.data && res.data.message ? res.data.message : (res.success ? 'Saved' : 'Error');
+                        form.querySelector('.ayotte-custom-result').textContent = msg;
                         if(res.success) window.location.href = dashboardUrl;
                     });
             };
@@ -458,7 +520,8 @@ class Custom_Form_Manager {
                 const data = new FormData(form);
                 fetch(ajaxurl+"?action=ayotte_custom_form_save_draft",{method:'POST',body:data})
                     .then(r=>r.json()).then(res=>{
-                        form.querySelector('.ayotte-custom-result').textContent=res.success?'Draft saved':'Error';
+                        const msg = res.data && res.data.message ? res.data.message : (res.success ? 'Draft saved' : 'Error');
+                        form.querySelector('.ayotte-custom-result').textContent = msg;
                         if(res.success) window.location.href = dashboardUrl;
                     });
             }));
@@ -539,6 +602,40 @@ class Custom_Form_Manager {
                     wp_send_json_error(['message' => 'Please complete all required fields']);
                 }
             }
+            foreach ($fields as $f) {
+                if ($f['type'] === 'pagebreak') continue;
+                $rules = self::parse_validation_rules($f['validation_rules']);
+                if (!$rules) continue;
+                $key = 'field_'.$f['id'];
+                $val = $data[$key] ?? '';
+                if ($f['type'] === 'file') {
+                    $val = $_FILES[$key]['name'] ?? '';
+                }
+                if (isset($rules['text_only']) && preg_match('/[^a-zA-Z\s]/', $val)) {
+                    wp_send_json_error(['message' => 'Invalid characters in '.$f['label']]);
+                }
+                if (isset($rules['numbers_only']) && preg_match('/[^0-9]/', $val)) {
+                    wp_send_json_error(['message' => 'Only numbers allowed in '.$f['label']]);
+                }
+                if (isset($rules['min_length']) && strlen($val) < $rules['min_length']) {
+                    wp_send_json_error(['message' => 'Minimum length for '.$f['label'].' is '.$rules['min_length']]);
+                }
+                if (isset($rules['max_length']) && strlen($val) > $rules['max_length']) {
+                    wp_send_json_error(['message' => 'Maximum length for '.$f['label'].' is '.$rules['max_length']]);
+                }
+                if ($f['type'] === 'file' && isset($rules['extensions']) && $val) {
+                    $ext = strtolower(pathinfo($val, PATHINFO_EXTENSION));
+                    if (!in_array($ext, $rules['extensions'], true)) {
+                        wp_send_json_error(['message' => 'Invalid file type for '.$f['label']]);
+                    }
+                }
+                if ($f['type'] === 'date' && isset($rules['min_age']) && $val) {
+                    $age = floor((time() - strtotime($val)) / 31557600);
+                    if ($age < $rules['min_age']) {
+                        wp_send_json_error(['message' => 'You must be at least '.$rules['min_age'].' for '.$f['label']]);
+                    }
+                }
+            }
         }
         if (isset($_POST['current_page'])) {
             $data['_current_page'] = intval($_POST['current_page']);
@@ -565,6 +662,28 @@ class Custom_Form_Manager {
         $tracker->recalculate_progress($user_id);
 
         wp_send_json_success();
+    }
+
+    private static function parse_validation_rules($str) {
+        $rules = [];
+        foreach (explode(';', (string) $str) as $r) {
+            $r = trim($r);
+            if ($r === '') continue;
+            if ($r === 'text-only') {
+                $rules['text_only'] = true;
+            } elseif ($r === 'numbers-only') {
+                $rules['numbers_only'] = true;
+            } elseif (preg_match('/^min:(\d+)$/', $r, $m)) {
+                $rules['min_length'] = (int) $m[1];
+            } elseif (preg_match('/^max:(\d+)$/', $r, $m)) {
+                $rules['max_length'] = (int) $m[1];
+            } elseif (preg_match('/^ext:([a-zA-Z0-9,]+)$/', $r, $m)) {
+                $rules['extensions'] = array_map('strtolower', array_map('trim', explode(',', $m[1])));
+            } elseif (preg_match('/^minage:(\d+)$/', $r, $m)) {
+                $rules['min_age'] = (int) $m[1];
+            }
+        }
+        return $rules;
     }
 }
 ?>
