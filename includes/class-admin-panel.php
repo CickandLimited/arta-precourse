@@ -322,9 +322,16 @@ class Ayotte_Admin_Panel {
                 btn.disabled = true;
                 const span = btn.nextElementSibling;
                 span.textContent = 'Generating...';
-                const res = await fetch(ajaxurl + '?action=ayotte_generate_pdf&user_id=' + user);
-                const data = await res.json();
-                btn.disabled = false;
+                let data;
+                try {
+                    const res = await fetch(ajaxurl + '?action=ayotte_generate_pdf&user_id=' + user);
+                    data = await res.json();
+                } catch (err) {
+                    span.textContent = 'Error generating PDF';
+                    return;
+                } finally {
+                    btn.disabled = false;
+                }
                 if (data.success) {
                     span.innerHTML = '<a href="' + data.data.url + '" target="_blank">Download</a>';
                 } else {
