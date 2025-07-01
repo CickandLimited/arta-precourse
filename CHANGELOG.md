@@ -1,0 +1,230 @@
+# Changelog
+
+- 2025-06-02 5af85cd Initial commit
+- 2025-06-18 a8df57f Add files via upload
+- 2025-06-18 d85a3fd Add bulk invites, form handling and progress tracking
+- 2025-06-18 9a0f248 Merge pull request #2 from CickandLimited/codex/extend-admin-panel-for-bulk-invitation-sending
+- 2025-06-18 dd17fa1 Create composer.json
+- 2025-06-18 86525a1 Delete {   "name": "ayotte directory
+- 2025-06-18 ab1f349 Create composer.json
+- 2025-06-18 7078a69 Fix invite redirect and add student dashboard
+- 2025-06-18 7bb313b Merge pull request #3 from CickandLimited/codex/fix-profile-page-redirect-and-debug-console-output
+- 2025-06-18 47d2d1e Add customer account creation and credential emails
+- 2025-06-18 3701a49 Skip registration flow
+- 2025-06-18 a84059a Add student portal menu and login redirect
+- 2025-06-18 eb19492 Merge pull request #4 from CickandLimited/codex/refactor-user-creation-and-email-logic
+- 2025-06-18 a2bb341 Merge pull request #5 from CickandLimited/codex/revise-handle_token_redirect-and-remove-registration-actions
+- 2025-06-18 273f918 Merge branch 'main' into codex/add-filters-for-user-specific-redirects-and-menu
+- 2025-06-18 9f8bbe4 Add Student Portal menu link and login redirect
+- 2025-06-18 4f7816a Merge pull request #6 from CickandLimited/codex/add-filters-for-user-specific-redirects-and-menu
+- 2025-06-18 de1140d Fix syntax errors by restoring precourse class
+- 2025-06-18 db75280 Merge pull request #7 from CickandLimited/codex/fix-critical-error-in-wordpress-site
+- 2025-06-23 d1882e7 Check for Forminator
+- 2025-06-23 95ee599 Merge pull request #22 from CickandLimited/codex/check-forminator-plugin-and-add-submenu
+- 2025-06-23 60edd08 Add priority to Forminator submenu
+- 2025-06-23 a008fa3 Merge pull request #23 from CickandLimited/codex/update-admin-menu-action-priority
+- 2025-06-23 0dcf49f Update ayotte-precourse-portal.php
+- 2025-06-23 041395c Add Forminator forms selection
+- 2025-06-23 63eb2cf Merge pull request #24 from CickandLimited/codex/extend-render_form_sets_page-to-list-forms
+- 2025-06-23 7ceb573 Extend tracking dashboard to assign forms
+- 2025-06-23 68d320e Merge pull request #25 from CickandLimited/codex/modify-render_tracking_dashboard-to-show-student-data
+- 2025-06-23 8d20341 Fix form selection toggle and dashboard checkboxes
+- 2025-06-23 722b630 Merge branch 'main' into 126m5r-codex/modify-render_tracking_dashboard-to-show-student-data
+- 2025-06-23 4f2c326 Merge pull request #26 from CickandLimited/126m5r-codex/modify-render_tracking_dashboard-to-show-student-data
+- 2025-06-23 9a9014c Revert "Extend form assignments in tracking dashboard"
+- 2025-06-23 c68eb7d Merge pull request #27 from CickandLimited/revert-26-126m5r-codex/modify-render_tracking_dashboard-to-show-student-data
+- 2025-06-23 9c900f7 Fix form selection toggle and dashboard checkboxes
+- 2025-06-23 1478299 Merge branch 'main' into 0mzo3p-codex/modify-render_tracking_dashboard-to-show-student-data
+- 2025-06-23 f044af4 Merge pull request #28 from CickandLimited/0mzo3p-codex/modify-render_tracking_dashboard-to-show-student-data
+- 2025-06-23 fd7c27d Revert "Extend form assignments in tracking dashboard"
+- 2025-06-23 b134c0c Merge pull request #29 from CickandLimited/revert-28-0mzo3p-codex/modify-render_tracking_dashboard-to-show-student-data
+- 2025-06-23 dccd7a9 Add patch combining progress dashboard and form set fixes
+- 2025-06-23 a8950ba Merge branch 'main' into nspwqv-codex/modify-render_tracking_dashboard-to-show-student-data
+- 2025-06-23 5ffe228 Merge pull request #30 from CickandLimited/nspwqv-codex/modify-render_tracking_dashboard-to-show-student-data
+- 2025-06-23 ca7d555 Update class-admin-panel.php
+- 2025-06-23 691a08f Update class-admin-panel.php
+- 2025-06-23 f769cc2 Update class-admin-panel.php
+- 2025-06-23 c586f1a Display assigned forms on dashboard
+- 2025-06-23 995dcc3 Merge pull request #31 from CickandLimited/codex/display-assigned-forms-on-dashboard
+- 2025-06-23 8eb24cb Track form submissions and update progress
+- 2025-06-23 dde2d2d Merge pull request #32 from CickandLimited/codex/hook-into-forminator_custom_form_after_handle_submit
+- 2025-06-23 330f4df Remove obsolete form set creation on Form Sets page
+- 2025-06-23 171af1f Merge pull request #33 from CickandLimited/codex/rework-precourse-form-sets-page
+- 2025-06-23 7c9a3c5 Extend dashboard with progress summary and readonly submissions
+- 2025-06-23 02e9a7f Merge pull request #34 from CickandLimited/codex/extend-render_dashboard-to-show-form-progress
+- 2025-06-23 e79530a Link Forminator submissions to users and show dashboard list
+- 2025-06-23 6529914 Merge pull request #35 from CickandLimited/codex/link-form-submissions-to-users-and-update-dashboard
+- 2025-06-23 1637e6b Add form unlock option in tracking dashboard
+- 2025-06-23 9529f03 Merge pull request #36 from CickandLimited/codex/add-unlock-feature-to-tracking-dashboard
+- 2025-06-23 fe18eda Recalculate progress when form assignments change
+- 2025-06-23 dca15e2 Merge pull request #37 from CickandLimited/codex/expose-public-method-for-progress-recalculation
+- 2025-06-23 b1b6b37 Ensure tracking dashboard clears form assignments
+- 2025-06-23 66c2396 Merge pull request #38 from CickandLimited/codex/update-user-assignments-in-render_tracking_dashboard
+- 2025-06-23 1f8db42 Update README with setup and usage details
+- 2025-06-23 02ce3a0 Merge pull request #39 from CickandLimited/codex/document-plugin-purpose-and-usage
+- 2025-06-23 e731927 Remove stray patch file
+- 2025-06-23 e7d8c29 Merge pull request #40 from CickandLimited/codex/delete-combined_changes.patch-from-project
+- 2025-06-23 d2c82f0 Update Forminator submission hook
+- 2025-06-23 26a03d0 Merge pull request #41 from CickandLimited/codex/update-ayotte-progress-tracker-to-use-correct-forminator-hoo
+- 2025-06-23 778e998 Add modern styling and update dashboard
+- 2025-06-23 1463179 Merge pull request #54 from CickandLimited/codex/upgrade-admin-and-student-dashboard-design
+- 2025-06-23 0740a65 Improve dashboard styling
+- 2025-06-23 d334565 Merge pull request #55 from CickandLimited/codex/upgrade-user-facing-dashboard-design
+- 2025-06-25 37b6cc7 Add form status tracking and revise progress calculation
+- 2025-06-25 25a7667 Merge pull request #56 from CickandLimited/codex/add-method-to-get-form-status
+- 2025-06-25 d296618 Update dashboard status handling
+- 2025-06-25 3a4c34a Merge pull request #57 from CickandLimited/codex/update-form-manager-dashboard-status
+- 2025-06-25 f475eda Display form status and progress
+- 2025-06-25 576d9a5 Merge pull request #58 from CickandLimited/codex/update-tracking-dashboard-and-table-layout
+- 2025-06-25 748cc09 Refresh progress on dashboard render
+- 2025-06-25 a0f7d0c Merge pull request #59 from CickandLimited/codex/update-dashboard-to-recalculate-progress-on-form-status-chan
+- 2025-06-25 7d42991 Store numeric progress
+- 2025-06-25 7707e78 Merge pull request #60 from CickandLimited/codex/update-recalculate_progress-to-store-integer-percentage
+- 2025-06-25 1289d60 Improve admin panel form lists
+- 2025-06-25 52368f8 Merge pull request #61 from CickandLimited/codex/refactor-checkbox-output-and-update-styles
+- 2025-06-25 a4669a4 Add progress bar visuals to tracking dashboard
+- 2025-06-25 f98cd7b Merge pull request #62 from CickandLimited/codex/add-progress-bar-to-tracking-dashboard
+- 2025-06-25 471b4bb Check stored status before Forminator lookup
+- 2025-06-25 1492362 Merge pull request #63 from CickandLimited/codex/modify-form-status-retrieval-logic
+- 2025-06-25 29bd73c Improve form status checks
+- 2025-06-25 64406e0 Merge pull request #64 from CickandLimited/codex/update-form-submission-and-status-handling
+- 2025-06-25 903e5d4 Add debug mode toggle
+- 2025-06-25 00b5f1f Merge pull request #65 from CickandLimited/codex/add-ayotte_debug_enabled-option-and-ui
+- 2025-06-25 91c7321 Reverse debug logs order
+- 2025-06-25 45bec7f Merge pull request #66 from CickandLimited/codex/reverse-logs-array-in-render_debug_console
+- 2025-06-25 79193cd Add Forminator API wrappers with debug logging
+- 2025-06-25 3914feb Merge pull request #67 from CickandLimited/codex/refactor-forminator-api-calls-in-ayotte_progress_tracker
+- 2025-06-25 bf4ced0 Add debug command execution
+- 2025-06-25 1161717 Merge pull request #68 from CickandLimited/codex/extend-render_debug_console-with-textarea-and-button
+- 2025-06-25 95a0a9c Add debug logging in progress recalculation
+- 2025-06-25 4a94843 Merge pull request #69 from CickandLimited/codex/log-assigned-forms-and-percentage-in-debug-mode
+- 2025-06-25 09b815a Remove unused registration invite template
+- 2025-06-25 cf006af Merge pull request #70 from CickandLimited/codex/update-or-remove-registration-invite.php
+- 2025-06-25 f587538 Search entries by email and update status labels
+- 2025-06-25 aba69ec Merge pull request #71 from CickandLimited/codex/update-api-call-to-get-entries
+- 2025-06-25 e4fdf65 Check Forminator entries each request instead of using cached status
+- 2025-06-25 0f5a125 Merge pull request #72 from CickandLimited/codex/modify-get_form_status-to-always-retrieve-entries
+- 2025-06-25 f9523e1 Call get_entries with pagination defaults
+- 2025-06-25 bd36829 Merge branch 'main' into q3pgmp-codex/update-api-call-to-get-entries
+- 2025-06-25 4c77790 Merge pull request #73 from CickandLimited/q3pgmp-codex/update-api-call-to-get-entries
+- 2025-06-25 64aedf4 Update entry handling
+- 2025-06-25 ed12de4 Merge pull request #74 from CickandLimited/codex/edit-form-submission-handling-and-status-check
+- 2025-06-26 dd7d113 Wrap long debug log lines
+- 2025-06-26 6d161e7 Merge pull request #75 from CickandLimited/codex/update-#logoutput-style-for-wrapping
+- 2025-06-26 1b964ac Remove log message truncation
+- 2025-06-26 4ab263a Merge pull request #76 from CickandLimited/codex/fix-debug-console-message-length
+- 2025-06-26 0d19737 Improve debug output formatting
+- 2025-06-26 b7bc0cc Merge branch 'main' into k0zsol-codex/fix-debug-console-message-length
+- 2025-06-26 0308768 Merge pull request #77 from CickandLimited/k0zsol-codex/fix-debug-console-message-length
+- 2025-06-26 dbf1bd8 Handle arrays from Forminator::get_entries
+- 2025-06-26 be4c795 Merge pull request #78 from CickandLimited/codex/handle-different-return-formats-in-get_form_status
+- 2025-06-26 74b7df2 Fix meta data iteration for readonly form
+- 2025-06-26 2cb81db Merge pull request #79 from CickandLimited/codex/update-ayotte_form_manager-to-iterate-meta_data
+- 2025-06-26 e58c3fe Log entry detection in progress tracker
+- 2025-06-26 eb59d5e Merge pull request #80 from CickandLimited/codex/add-info-level-log-in-get_form_status
+- 2025-06-26 5cdc865 Add module metadata to logging
+- 2025-06-26 73dc8e6 Merge pull request #81 from CickandLimited/codex/modify-logging-to-include-module
+- 2025-06-26 2f5e7ef Add log filtering options to debug console
+- 2025-06-26 abfe387 Merge pull request #82 from CickandLimited/codex/extend-log-filtering-functionality
+- 2025-06-26 c010e94 Add success logs for key operations
+- 2025-06-26 90df760 Merge pull request #83 from CickandLimited/codex/add-success-logs-to-major-methods
+- 2025-06-30 fcc77f7 Add custom form DB and manager
+- 2025-06-30 fdf4d16 Merge pull request #84 from CickandLimited/codex/implement-custom-db-management-and-form-builder
+- 2025-06-30 a5b690a Remove duplicate form settings and custom forms menu
+- 2025-06-30 abb4dde Merge branch 'main' into t4yvg4-codex/implement-custom-db-management-and-form-builder
+- 2025-06-30 cc694a5 Merge pull request #86 from CickandLimited/t4yvg4-codex/implement-custom-db-management-and-form-builder
+- 2025-06-30 0ca101e Add database schema checks and setup
+- 2025-06-30 e391424 Merge pull request #87 from CickandLimited/codex/create-ensure_schema-method-and-setup-tables
+- 2025-06-30 962a351 Remove Forminator dependency
+- 2025-06-30 46d5f9c Merge pull request #88 from CickandLimited/codex/remove-forminator-dependencies
+- 2025-06-30 218618d Switch precourse forms to custom forms
+- 2025-06-30 ad2869d Merge pull request #89 from CickandLimited/codex/update-form-manager-to-use-custom-form-shortcode
+- 2025-06-30 c14b7f6 Add user tracking for custom form submissions
+- 2025-06-30 24d77d9 Merge pull request #90 from CickandLimited/codex/modify-custom-form-submission-handling
+- 2025-06-30 ae825c1 Switch progress tracking to custom forms
+- 2025-06-30 3f891dc Merge pull request #91 from CickandLimited/codex/remove-forminator-hooks-and-add-custom-form-methods
+- 2025-06-30 837fa23 Use custom form IDs and names
+- 2025-06-30 abc8f41 Merge pull request #92 from CickandLimited/codex/update-form-handling-with-get_custom_forms
+- 2025-06-30 f023ca7 Add admin form preview
+- 2025-06-30 4207fc9 Merge pull request #93 from CickandLimited/codex/add-preview-link-to-list_forms
+- 2025-06-30 d9486e5 Remove Forminator instructions and document custom forms
+- 2025-06-30 b7d439c Merge pull request #94 from CickandLimited/codex/remove-forminator-instructions-and-document-custom-form-mana
+- 2025-06-30 975f0b7 fix undefined variable in progress tracker
+- 2025-06-30 68066ee Merge pull request #95 from CickandLimited/codex/fix-undefined-variable-error-in-admin-panel
+- 2025-06-30 39251c9 Add status and locked columns
+- 2025-06-30 548a282 Merge pull request #96 from CickandLimited/codex/update-custom_form_submissions-schema
+- 2025-06-30 b79c765 Support draft status for custom form submissions
+- 2025-06-30 1655d70 Merge pull request #97 from CickandLimited/codex/update-handle_submission-for-draft-and-submitted-statuses
+- 2025-06-30 a427ca1 Pass submission ID in custom form hook
+- 2025-06-30 cfa4eda Merge pull request #98 from CickandLimited/codex/update-do_action-and-add_action-parameters
+- 2025-06-30 e1073fe Update progress tracker with draft status
+- 2025-06-30 91508f3 Merge pull request #99 from CickandLimited/codex/revise-progress-tracker-and-status-handling
+- 2025-06-30 29e5431 Add draft support to custom forms
+- 2025-06-30 71bd074 Merge pull request #100 from CickandLimited/codex/update-form-with-save-draft-functionality
+- 2025-06-30 a2e268f Add locked status and update dashboard
+- 2025-06-30 e9dc21c Merge pull request #101 from CickandLimited/codex/modify-dashboard-output-in-class-form-manager.php
+- 2025-06-30 4a75aa1 Fix frontend ajaxurl and add dashboard link
+- 2025-06-30 44cf612 Merge pull request #102 from CickandLimited/codex/fix-missing-action-triggers-and-add-back-to-dashboard-button
+- 2025-06-30 c4f6dd7 Update locked status label and styling
+- 2025-06-30 795afc4 Merge pull request #103 from CickandLimited/codex/update--locked--case-and-styling
+- 2025-06-30 fd60c1c Add view links for locked forms
+- 2025-06-30 07a3d99 Merge pull request #104 from CickandLimited/codex/modify-locked-form-branch-and-admin-dashboard
+- 2025-06-30 c2014f9 Redirect to dashboard after custom form actions
+- 2025-06-30 03d7a2b Merge pull request #105 from CickandLimited/codex/define-dashboardurl-and-update-js-handlers
+- 2025-06-30 bff87d9 Handle locked form status in progress dashboard
+- 2025-06-30 5d11881 Merge pull request #106 from CickandLimited/codex/update-progress-bar-for-locked-status
+- 2025-06-30 1e767cc Add AJAX unlocking for forms
+- 2025-06-30 9da3ece Merge pull request #107 from CickandLimited/codex/replace-unlock-checkbox-with-button-and-add-ajax-action
+- 2025-06-30 1b0b572 Remove precourse form page creation
+- 2025-06-30 1093130 Merge pull request #108 from CickandLimited/codex/remove-precourse-form-page-insertion
+- 2025-06-30 23855cf Add checkbox, select, radio field types
+- 2025-06-30 7b86fea Merge pull request #109 from CickandLimited/codex/update-form-field-types-and-handling
+- 2025-06-30 c81f585 Add page break support to custom forms
+- 2025-06-30 989ce68 Merge pull request #110 from CickandLimited/codex/add-page-break-functionality-to-form-builder
+- 2025-06-30 2004279 Enable WYSIWYG editor for static form fields
+- 2025-06-30 bd31fca Merge pull request #111 from CickandLimited/codex/enhance-static-field-handling-with-tinymce-and-html-sanitiza
+- 2025-06-30 349d532 Style frontend form buttons
+- 2025-06-30 8fb760d Merge pull request #112 from CickandLimited/codex/update-form-button-styles-and-layout
+- 2025-06-30 ff4b0e1 style: add readonly form styling
+- 2025-06-30 6611a88 Merge pull request #113 from CickandLimited/codex/extend-frontend.css-with-ayotte-readonly-form-styles
+- 2025-06-30 ec20f8c Allow readonly form handling
+- 2025-06-30 a0e6eed Merge pull request #114 from CickandLimited/gwspbv-codex/update-form-submission-and-status-handling
+- 2025-06-30 4386b49 Wrap custom form with precourse container
+- 2025-06-30 ee2180e Merge pull request #115 from CickandLimited/codex/update-form-markup-and-style
+- 2025-06-30 b605b26 Add options column to custom form builder
+- 2025-06-30 05604ab Merge pull request #116 from CickandLimited/codex/update-form-to-handle-field-options
+- 2025-06-30 302883c Add required attribute support and validate submission
+- 2025-06-30 19801f2 Merge pull request #117 from CickandLimited/codex/add-required-field-validation-and-handling
+- 2025-06-30 b92f39a Add unlocked status handling
+- 2025-06-30 c09d34a Merge pull request #118 from CickandLimited/codex/update-render_dashboard-and-add-css-class
+- 2025-06-30 fbc9bb6 Add settings page and submenu
+- 2025-06-30 7ad2da8 Merge pull request #119 from CickandLimited/codex/create-settings-page-and-update-menu
+- 2025-06-30 af30571 Embed form DB settings in main settings page
+- 2025-06-30 b16309f Merge pull request #120 from CickandLimited/codex/refactor-menu-and-render-settings-page
+- 2025-06-30 9409869 Add unlock request workflow
+- 2025-06-30 493127b Merge pull request #121 from CickandLimited/codex/implement-unlock-request-feature
+- 2025-07-01 0062c9c Add conditional field support
+- 2025-07-01 98cc270 Merge pull request #122 from CickandLimited/codex/extend-custom_form_fields-with-conditions-column
+- 2025-07-01 b56b993 Add validation rules for custom form fields
+- 2025-07-01 c442e61 Merge pull request #123 from CickandLimited/codex/add-validation-rules-to-custom-form-fields
+- 2025-07-01 b0c1fa5 Add PDF generation feature
+- 2025-07-01 751110c Merge pull request #124 from CickandLimited/codex/integrate-pdf-generation-and-admin-feature
+- 2025-07-01 ce41374 Fix form navigation buttons init timing
+- 2025-07-01 c48a066 Merge pull request #125 from CickandLimited/codex/fix-submit-and-save-draft-buttons
+- 2025-07-01 f35f7d5 Fix form script initialization
+- 2025-07-01 87a7a93 Merge branch 'main' into 2emvhj-codex/fix-submit-and-save-draft-buttons
+- 2025-07-01 1e06270 Merge pull request #126 from CickandLimited/2emvhj-codex/fix-submit-and-save-draft-buttons
+- 2025-07-01 3386375 Move custom form JS to module and enqueue
+- 2025-07-01 3fa44f2 Merge pull request #128 from CickandLimited/codex/refactor-form-logic-to-separate-js-module
+- 2025-07-01 93ec694 adding composer and mpdf
+- 2025-07-01 01c4fe9 Add mPDF with Composer support
+- 2025-07-01 f1d2885 Add Composer autoloader
+- 2025-07-01 27699ea Merge pull request #129 from CickandLimited/codex/add-composer-autoload-setup
+- 2025-07-01 3219c11 Fix mPDF class reference for bundled version
+- 2025-07-01 0b17c11 Merge pull request #130 from CickandLimited/codex/fix-mpdf-library-not-available-error
+- 2025-07-01 42239dd Handle PDF generation errors
+- 2025-07-01 a5dc11c Merge pull request #131 from CickandLimited/codex/wrap-fetch-call-in-try-catch
+- 2025-07-01 9d14a20 feat: auto-download generated PDF
+- 2025-07-01 b119ecb Merge pull request #132 from CickandLimited/codex/add-anchor-link-for-download-in-event-listener
+- 2025-07-01 5c185bf Add PDF preview with image transforms
+- 2025-07-01 e8ea18b Merge pull request #133 from CickandLimited/codex/implement-admin-page-for-pdf-generation
