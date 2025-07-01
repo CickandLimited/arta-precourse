@@ -7,11 +7,13 @@ class Ayotte_PDF_Generator {
      * @return string|WP_Error URL to the generated PDF or error.
      */
     public static function create_user_pdf($user_id) {
-        if (!class_exists('\\Mpdf\\Mpdf')) {
+        // Support the bundled mPDF 6.x library which exposes a global mPDF class
+        // rather than the namespaced Mpdf\Mpdf used in newer versions.
+        if (!class_exists('mPDF')) {
             return new WP_Error('missing_library', 'mPDF library is not available');
         }
 
-        $mpdf = new \Mpdf\Mpdf();
+        $mpdf = new \mPDF();
 
         $html = '<h1>User Submissions</h1>';
 
