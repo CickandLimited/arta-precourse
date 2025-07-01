@@ -10,6 +10,13 @@ defined('ABSPATH') || exit;
 
 define('AYOTTE_PRECOURSE_VERSION', '1.0');
 
+// Composer autoloader for bundled libraries
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+} else {
+    error_log('Autoload file not found.');
+}
+
 // Includes
 require_once plugin_dir_path(__FILE__) . 'includes/class-ayotte-precourse.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-invitation-manager.php';
