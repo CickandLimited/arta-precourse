@@ -21,15 +21,17 @@
     async function openModal(user){
         const modal = document.createElement('div');
         modal.className='ayotte-pdf-modal';
-        modal.innerHTML='<div class="ayotte-pdf-dialog"><div class="ayotte-pdf-preview">Loading...</div><p><button class="button button-primary ayotte-pdf-save">Generate PDF</button> <button class="button ayotte-pdf-close">Close</button></p></div>';
+        modal.innerHTML='<div class="ayotte-pdf-dialog"><div class="pdf-msg"></div><div class="ayotte-pdf-preview">Loading...</div><p><button class="button button-primary ayotte-pdf-save">Generate PDF</button> <button class="button ayotte-pdf-close">Close</button></p></div>';
         document.body.appendChild(modal);
-        const res = await fetch(ajaxurl+'?action=ayotte_prepare_pdf&user_id='+user);
+        const interactLoaded = typeof window.interact === 'function';
+        const res = await fetch(ajaxurl+'?action=ayotte_prepare_pdf&interact_loaded='+(interactLoaded?1:0)+'&user_id='+user);
         const data = await res.json();
+        const msgBox = modal.querySelector('.pdf-msg');
         if(data.success){
             modal.querySelector('.ayotte-pdf-preview').innerHTML = data.data.html;
             modal.querySelectorAll('img[data-img-index]').forEach(initImage);
         } else {
-            modal.querySelector('.ayotte-pdf-preview').textContent = data.data.message || 'Error';
+            msgBox.textContent = data.data.message || 'Error';
         }
         modal.querySelector('.ayotte-pdf-close').onclick = ()=>{ document.body.removeChild(modal); };
         modal.querySelector('.ayotte-pdf-save').onclick = async ()=>{
@@ -41,7 +43,7 @@
             const resp = await fetch(ajaxurl+'?action=ayotte_generate_pdf',{
                 method:'POST',
                 headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({user_id:user,transforms})
+                body: JSON.stringify({user_id:user,transforms,interact_loaded:interactLoaded})
             });
             const d = await resp.json();
             modal.querySelector('.ayotte-pdf-save').disabled=false;
@@ -49,7 +51,7 @@
                 window.open(d.data.url,'_blank');
                 document.body.removeChild(modal);
             } else {
-                alert(d.data.message || 'Error');
+                msgBox.textContent = d.data.message || 'Error';
             }
         };
     }
