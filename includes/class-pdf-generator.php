@@ -79,13 +79,13 @@ class Ayotte_PDF_Generator {
      * @return string|WP_Error URL to the generated PDF or error.
      */
     public static function create_user_pdf($user_id, $transforms = []) {
-        // Support the bundled mPDF 6.x library which exposes a global mPDF class
-        // rather than the namespaced Mpdf\Mpdf used in newer versions.
-        if (!class_exists('mPDF')) {
+        // Support both the old global mPDF class as well as the newer
+        // namespaced Mpdf\Mpdf class.
+        if (!class_exists('mPDF') && !class_exists('\\Mpdf\\Mpdf')) {
             return new WP_Error('missing_library', 'mPDF library is not available');
         }
 
-        $mpdf = new \mPDF();
+        $mpdf = class_exists('\\Mpdf\\Mpdf') ? new \Mpdf\Mpdf() : new \mPDF();
 
         $idx = 0;
         $phone  = get_user_meta($user_id, 'ayotte_phone', true);
