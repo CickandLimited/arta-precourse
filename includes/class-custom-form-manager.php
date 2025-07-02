@@ -110,6 +110,7 @@ class Custom_Form_Manager {
             $opts_in    = $_POST['field_options'] ?? [];
             $conds_in   = $_POST['field_conditions'] ?? [];
             $valid_in   = $_POST['field_validation'] ?? [];
+            $min_in     = $_POST['field_min_checked'] ?? [];
             $required   = $_POST['field_required'] ?? [];
             foreach ($labels as $idx => $label) {
                 $label = sanitize_text_field($label);
@@ -125,10 +126,11 @@ class Custom_Form_Manager {
                 }
                 $cond  = sanitize_text_field($conds_in[$idx] ?? '');
                 $valid = sanitize_text_field($valid_in[$idx] ?? '');
+                $min   = intval($min_in[$idx] ?? 0);
                 $req   = in_array($idx, $required) ? 1 : 0;
                 $db->query(
-                    "INSERT INTO custom_form_fields (form_id,label,type,options,required,conditions,validation_rules) VALUES (".
-                    "$id, '".$db->real_escape_string($label)."', '".$db->real_escape_string($type)."', '".$db->real_escape_string($value)."', $req, '".$db->real_escape_string($cond)."', '".$db->real_escape_string($valid)."')"
+                    "INSERT INTO custom_form_fields (form_id,label,type,options,required,min_checked,conditions,validation_rules) VALUES (".
+                    "$id, '".$db->real_escape_string($label)."', '".$db->real_escape_string($type)."', '".$db->real_escape_string($value)."', $req, $min, '".$db->real_escape_string($cond)."', '".$db->real_escape_string($valid)."')"
                 );
             }
             echo '<div class="updated"><p>Form saved.</p></div>';
@@ -142,7 +144,7 @@ class Custom_Form_Manager {
                 <?php wp_nonce_field('ayotte_custom_form', 'ayotte_custom_form_nonce'); ?>
                 <p><label>Name<br><input type="text" name="form_name" value="<?php echo esc_attr($name); ?>" class="regular-text"></label></p>
                 <table class="widefat" id="ayotte-form-fields">
-                    <thead><tr><th>Label</th><th>Type</th><th>Text</th><th>Options</th><th>Conditions</th><th>Validation</th><th>Required</th><th></th></tr></thead>
+                    <thead><tr><th>Label</th><th>Type</th><th>Text</th><th>Options</th><th>Conditions</th><th>Validation</th><th>Min Checked</th><th>Required</th><th></th></tr></thead>
                     <tbody>
                         <?php foreach ($fields as $idx => $f) : ?>
                         <tr>
@@ -195,6 +197,13 @@ class Custom_Form_Manager {
                             </td>
                             <td class="conditions-cell"><input type="text" name="field_conditions[]" value="<?php echo esc_attr($f['conditions']); ?>"></td>
                             <td class="validation-cell"><input type="text" name="field_validation[]" value="<?php echo esc_attr($f['validation_rules']); ?>"></td>
+                            <td class="min-checked-cell">
+                                <?php if ($f['type'] === 'checkbox') : ?>
+                                    <input type="number" name="field_min_checked[]" value="<?php echo intval($f['min_checked']); ?>" min="0" class="small-text">
+                                <?php else : ?>
+                                    <input type="hidden" name="field_min_checked[]" value="0">
+                                <?php endif; ?>
+                            </td>
                             <td><input type="checkbox" name="field_required[]" value="<?php echo $idx; ?>" <?php checked($f['required'],1); ?>></td>
                             <td><button type="button" class="remove button">Remove</button></td>
                         </tr>
@@ -227,6 +236,7 @@ class Custom_Form_Manager {
                     `<td class="options-cell"><input type="hidden" name="field_options[]"></td>`+
                     `<td class="conditions-cell"><input type="text" name="field_conditions[]"></td>`+
                     `<td class="validation-cell"><input type="text" name="field_validation[]"></td>`+
+                    `<td class="min-checked-cell"><input type="hidden" name="field_min_checked[]" value="0"></td>`+
                     `<td><input type="checkbox" name="field_required[]" value=""></td>`+
                     `<td><button type="button" class="remove button">Remove</button></td>`;
                 table.appendChild(row);
@@ -237,18 +247,26 @@ class Custom_Form_Manager {
                 const row = sel.closest('tr');
                 const textCell = row.querySelector('.text-cell');
                 const optionsCell = row.querySelector('.options-cell');
+                const minCell = row.querySelector('.min-checked-cell');
                 if(sel.value === 'static'){
                     textCell.innerHTML = '<textarea class="ayotte-static-editor" name="field_text[]"></textarea>';
                     optionsCell.innerHTML = '<input type="hidden" name="field_options[]">';
+                    minCell.innerHTML = '<input type="hidden" name="field_min_checked[]" value="0">';
                     if(window.wp && wp.editor){
                         wp.editor.initialize(textCell.querySelector('textarea'));
                     }
                 }else if(['select','checkbox','radio'].includes(sel.value)){
                     textCell.innerHTML = '<input type="hidden" name="field_text[]">';
                     optionsCell.innerHTML = '<input type="text" name="field_options[]">';
+                    if(sel.value==='checkbox'){
+                        minCell.innerHTML = '<input type="number" name="field_min_checked[]" value="0" min="0" class="small-text">';
+                    }else{
+                        minCell.innerHTML = '<input type="hidden" name="field_min_checked[]" value="0">';
+                    }
                 }else{
                     textCell.innerHTML = '<input type="hidden" name="field_text[]">';
                     optionsCell.innerHTML = '<input type="hidden" name="field_options[]">';
+                    minCell.innerHTML = '<input type="hidden" name="field_min_checked[]" value="0">';
                 }
             }
            table.addEventListener('click', e=>{
@@ -364,7 +382,14 @@ class Custom_Form_Manager {
             <div class="ayotte-form-page" data-page="<?php echo $pi; ?>" style="<?php echo $pi==$current_page?'':'display:none'; ?>">
                 <?php foreach ($pfields as $f): ?>
                     <?php $name = 'field_'.$f['id']; ?>
-                    <p<?php echo $f['conditions'] ? ' data-conditions="'.esc_attr($f['conditions']).'"' : ''; ?>>
+                    <?php
+                        $min_attr = '';
+                        $min_check = max(intval($f['min_checked']), $f['required'] ? 1 : 0);
+                        if ($min_check > 0) {
+                            $min_attr = ' data-min-check="' . $min_check . '"';
+                        }
+                    ?>
+                    <p<?php echo $f['conditions'] ? ' data-conditions="'.esc_attr($f['conditions']).'"' : ''; echo $min_attr; ?>>
                         <label><?php echo esc_html($f['label']); ?><br>
                         <?php
                             $val  = $values[$name] ?? '';
@@ -392,7 +417,7 @@ class Custom_Form_Manager {
                                     $selected = $val ? explode(',', $val) : [];
                                     foreach ($opts as $o) {
                                         $checked = in_array($o, $selected) ? 'checked' : '';
-                                        echo '<label><input type="checkbox" name="'.$name.'[]" value="'.esc_attr($o).'" '.$checked.$req.$rules_attr.'> '.esc_html($o).'</label> ';
+                                        echo '<label><input type="checkbox" name="'.$name.'[]" value="'.esc_attr($o).'" '.$checked.$rules_attr.'> '.esc_html($o).'</label> ';
                                     }
                                     break;
                                 case 'select':
@@ -503,6 +528,20 @@ class Custom_Form_Manager {
                 $val = $data[$key] ?? '';
                 if ($val === '' && $val !== '0') {
                     wp_send_json_error(['message' => 'Please complete all required fields']);
+                }
+            }
+            foreach ($fields as $f) {
+                if ($f['type'] !== 'checkbox') continue;
+                $min = max(intval($f['min_checked']), $f['required'] ? 1 : 0);
+                if ($min > 0) {
+                    $key = 'field_'.$f['id'];
+                    $count = 0;
+                    if (!empty($data[$key])) {
+                        $count = count(array_filter(explode(',', $data[$key])));
+                    }
+                    if ($count < $min) {
+                        wp_send_json_error(['message' => 'Please select at least '.$min.' options for '.$f['label']]);
+                    }
                 }
             }
             foreach ($fields as $f) {
