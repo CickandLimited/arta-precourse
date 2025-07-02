@@ -11,8 +11,11 @@ class Invitation_Manager {
 
     public function validate_token($token) {
         $data = get_option("ayotte_invite_{$token}");
-        if ($data && $data['expires'] > time()) {
+        if ($data && isset($data['expires']) && $data['expires'] > time()) {
             return $data['email'];
+        }
+        if ($data && isset($data['expires']) && $data['expires'] <= time()) {
+            delete_option("ayotte_invite_{$token}");
         }
         return false;
     }
