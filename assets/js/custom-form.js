@@ -26,7 +26,13 @@
             const f = form.querySelector('[name="'+name+'"]');
             if(f) val = f.value;
           }
-          el.style.display = (val==cond.value) ? '' : 'none';
+          let pass = false;
+          if(cond.operator === 'not_equals') pass = val!=cond.value;
+          else pass = val==cond.value;
+          if(cond.action === 'hide')
+            el.style.display = pass ? 'none' : '';
+          else
+            el.style.display = pass ? '' : 'none';
         }catch(e){
           el.style.display='';
         }

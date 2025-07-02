@@ -112,6 +112,9 @@ class Custom_Form_Manager {
             $valid_in   = $_POST['field_validation'] ?? [];
             $min_in     = $_POST['field_min_checked'] ?? [];
             $required   = $_POST['field_required'] ?? [];
+            $insert_ids = [];
+            $raw_conds  = [];
+            $raw_valid  = [];
             foreach ($labels as $idx => $label) {
                 $label = sanitize_text_field($label);
                 $type  = sanitize_text_field($types[$idx] ?? 'text');
@@ -130,8 +133,23 @@ class Custom_Form_Manager {
                 $req   = in_array($idx, $required) ? 1 : 0;
                 $db->query(
                     "INSERT INTO custom_form_fields (form_id,label,type,options,required,min_checked,conditions,validation_rules) VALUES (".
-                    "$id, '".$db->real_escape_string($label)."', '".$db->real_escape_string($type)."', '".$db->real_escape_string($value)."', $req, $min, '".$db->real_escape_string($cond)."', '".$db->real_escape_string($valid)."')"
+                    "$id, '".$db->real_escape_string($label)."', '".$db->real_escape_string($type)."', '".$db->real_escape_string($value)."', $req, $min, '', '')"
                 );
+                $fid = $db->insert_id;
+                $insert_ids[$idx] = $fid;
+                $raw_conds[$idx] = $cond;
+                $raw_valid[$idx] = $valid;
+            }
+            foreach ($insert_ids as $idx => $fid) {
+                $cond = $raw_conds[$idx] ?? '';
+                $cond_arr = json_decode($cond, true);
+                if (is_array($cond_arr) && isset($cond_arr['target_field']) && isset($insert_ids[$cond_arr['target_field']])) {
+                    $cond_arr['target_field'] = $insert_ids[$cond_arr['target_field']];
+                    $cond = json_encode($cond_arr);
+                }
+                $cond = $db->real_escape_string($cond);
+                $valid = $db->real_escape_string($raw_valid[$idx] ?? '');
+                $db->query("UPDATE custom_form_fields SET conditions='$cond', validation_rules='$valid' WHERE id=$fid");
             }
             echo '<div class="updated"><p>Form saved.</p></div>';
         }
@@ -147,7 +165,7 @@ class Custom_Form_Manager {
                     <thead><tr><th>Label</th><th>Type</th><th>Text</th><th>Options</th><th>Conditions</th><th>Validation</th><th>Min Checked</th><th>Required</th><th></th></tr></thead>
                     <tbody>
                         <?php foreach ($fields as $idx => $f) : ?>
-                        <tr>
+                        <tr data-field-id="<?php echo intval($f['id']); ?>">
                             <td><input type="text" name="field_label[]" value="<?php echo esc_attr($f['label']); ?>"></td>
                             <td>
                                 <select name="field_type[]">
@@ -195,8 +213,33 @@ class Custom_Form_Manager {
                                 }
                                 ?>
                             </td>
-                            <td class="conditions-cell"><input type="text" name="field_conditions[]" value="<?php echo esc_attr($f['conditions']); ?>"></td>
-                            <td class="validation-cell"><input type="text" name="field_validation[]" value="<?php echo esc_attr($f['validation_rules']); ?>"></td>
+                            <td class="conditions-cell">
+                                <select class="cond-action">
+                                    <option value="">None</option>
+                                    <option value="show">Show</option>
+                                    <option value="hide">Hide</option>
+                                </select>
+                                <select class="cond-target"></select>
+                                <select class="cond-operator">
+                                    <option value="equals">=</option>
+                                    <option value="not_equals">≠</option>
+                                </select>
+                                <select class="cond-value"></select>
+                                <input type="hidden" name="field_conditions[]" value="<?php echo esc_attr($f['conditions']); ?>">
+                            </td>
+                            <td class="validation-cell">
+                                <select class="validation-rule">
+                                    <option value="">None</option>
+                                    <option value="text-only">Text Only</option>
+                                    <option value="numbers-only">Numbers Only</option>
+                                    <option value="min">Min Length</option>
+                                    <option value="max">Max Length</option>
+                                    <option value="ext">File Extensions</option>
+                                    <option value="minage">Min Age</option>
+                                </select>
+                                <input type="text" class="validation-value" style="width:60px">
+                                <input type="hidden" name="field_validation[]" value="<?php echo esc_attr($f['validation_rules']); ?>">
+                            </td>
                             <td class="min-checked-cell">
                                 <?php if ($f['type'] === 'checkbox') : ?>
                                     <input type="number" name="field_min_checked[]" value="<?php echo intval($f['min_checked']); ?>" min="0" class="small-text">
@@ -234,13 +277,32 @@ class Custom_Form_Manager {
                     `</select></td>`+
                     `<td class="text-cell"><input type="hidden" name="field_text[]"></td>`+
                     `<td class="options-cell"><input type="hidden" name="field_options[]"></td>`+
-                    `<td class="conditions-cell"><input type="text" name="field_conditions[]"></td>`+
-                    `<td class="validation-cell"><input type="text" name="field_validation[]"></td>`+
+                    `<td class="conditions-cell">`+
+                        `<select class="cond-action"><option value="">None</option><option value="show">Show</option><option value="hide">Hide</option></select>`+
+                        `<select class="cond-target"></select>`+
+                        `<select class="cond-operator"><option value="equals">=</option><option value="not_equals">≠</option></select>`+
+                        `<select class="cond-value"></select>`+
+                        `<input type="hidden" name="field_conditions[]">`+
+                    `</td>`+
+                    `<td class="validation-cell">`+
+                        `<select class="validation-rule">`+
+                            `<option value="">None</option>`+
+                            `<option value="text-only">Text Only</option>`+
+                            `<option value="numbers-only">Numbers Only</option>`+
+                            `<option value="min">Min Length</option>`+
+                            `<option value="max">Max Length</option>`+
+                            `<option value="ext">File Extensions</option>`+
+                            `<option value="minage">Min Age</option>`+
+                        `</select>`+
+                        `<input type="text" class="validation-value" style="width:60px">`+
+                        `<input type="hidden" name="field_validation[]">`+
+                    `</td>`+
                     `<td class="min-checked-cell"><input type="hidden" name="field_min_checked[]" value="0"></td>`+
                     `<td><input type="checkbox" name="field_required[]" value=""></td>`+
                     `<td><button type="button" class="remove button">Remove</button></td>`;
                 table.appendChild(row);
                 handleTypeChange(row.querySelector('select'));
+                initRow(row);
                 updateIndexes();
             };
             function handleTypeChange(sel){
@@ -268,6 +330,7 @@ class Custom_Form_Manager {
                     optionsCell.innerHTML = '<input type="hidden" name="field_options[]">';
                     minCell.innerHTML = '<input type="hidden" name="field_min_checked[]" value="0">';
                 }
+                updateFieldOptions();
             }
            table.addEventListener('click', e=>{
                if(e.target.classList.contains('remove')){
@@ -279,11 +342,118 @@ class Custom_Form_Manager {
                 if(e.target.name === 'field_type[]'){
                     handleTypeChange(e.target);
                 }
+                if(e.target.name === 'field_label[]' || e.target.name === 'field_options[]'){
+                    updateFieldOptions();
+                }
+                if(e.target.classList.contains('cond-target')){
+                    updateValueDropdown(e.target.closest('tr'));
+                }
             });
+            function getFields(){
+                return Array.from(table.querySelectorAll('tr')).map((r,i)=>{
+                    return {
+                        index:i,
+                        label:r.querySelector('input[name="field_label[]"]').value||'Field '+(i+1),
+                        type:r.querySelector('select[name="field_type[]"]').value,
+                        options:(r.querySelector('.options-cell input[name="field_options[]"]')||{value:''}).value
+                    };
+                });
+            }
+            function updateFieldOptions(){
+                const fields=getFields();
+                table.querySelectorAll('.cond-target').forEach(sel=>{
+                    const cur=sel.value;
+                    sel.innerHTML='<option value="">- field -</option>';
+                    fields.forEach(f=>{
+                        const opt=document.createElement('option');
+                        opt.value=f.index;
+                        opt.textContent=f.label;
+                        sel.appendChild(opt);
+                    });
+                    sel.value=cur;
+                });
+                table.querySelectorAll('tr').forEach(updateValueDropdown);
+            }
+            function updateValueDropdown(row){
+                const valSel=row.querySelector('.cond-value');
+                if(!valSel) return;
+                const target=row.querySelector('.cond-target').value;
+                const info=getFields().find(f=>f.index==target);
+                valSel.innerHTML='';
+                if(info && ['select','checkbox','radio'].includes(info.type)){
+                    valSel.style.display='';
+                    info.options.split(',').map(o=>o.trim()).filter(Boolean).forEach(o=>{
+                        const opt=document.createElement('option');
+                        opt.value=o;
+                        opt.textContent=o;
+                        valSel.appendChild(opt);
+                    });
+                }else{
+                    valSel.style.display='none';
+                }
+            }
+            function initRow(row){
+                const cond=row.querySelector('input[name="field_conditions[]"]');
+                if(cond && cond.value){
+                    try{
+                        const c=JSON.parse(cond.value);
+                        row.querySelector('.cond-action').value=c.action||'show';
+                        row.querySelector('.cond-target').value=c.target_field;
+                        row.querySelector('.cond-operator').value=c.operator||'equals';
+                        row.querySelector('.cond-value').value=c.value||'';
+                    }catch(e){}
+                }
+                const val=row.querySelector('input[name="field_validation[]"]');
+                if(val && val.value){
+                    const rule=row.querySelector('.validation-rule');
+                    const input=row.querySelector('.validation-value');
+                    const v=val.value;
+                    if(v==='text-only'||v==='numbers-only'){rule.value=v;}
+                    else if(v.startsWith('min:')){rule.value='min';input.value=v.slice(4);} 
+                    else if(v.startsWith('max:')){rule.value='max';input.value=v.slice(4);} 
+                    else if(v.startsWith('ext:')){rule.value='ext';input.value=v.slice(4);} 
+                    else if(v.startsWith('minage:')){rule.value='minage';input.value=v.slice(7);} 
+                }
+            }
+            function prepareSave(){
+                table.querySelectorAll('tr').forEach(row=>{
+                    const condHidden=row.querySelector('input[name="field_conditions[]"]');
+                    const action=row.querySelector('.cond-action').value;
+                    const target=row.querySelector('.cond-target').value;
+                    const op=row.querySelector('.cond-operator').value;
+                    const val=row.querySelector('.cond-value').value;
+                    if(target){
+                        condHidden.value=JSON.stringify({action:action||'show',target_field:parseInt(target,10),operator:op||'equals',value:val});
+                    }else{
+                        condHidden.value='';
+                    }
+                    const valHidden=row.querySelector('input[name="field_validation[]"]');
+                    const rule=row.querySelector('.validation-rule').value;
+                    const ruleVal=row.querySelector('.validation-value').value.trim();
+                    switch(rule){
+                        case 'text-only':
+                        case 'numbers-only':
+                            valHidden.value=rule;break;
+                        case 'min':
+                            valHidden.value=ruleVal?'min:'+ruleVal:'';break;
+                        case 'max':
+                            valHidden.value=ruleVal?'max:'+ruleVal:'';break;
+                        case 'ext':
+                            valHidden.value=ruleVal?'ext:'+ruleVal:'';break;
+                        case 'minage':
+                            valHidden.value=ruleVal?'minage:'+ruleVal:'';break;
+                        default:
+                            valHidden.value='';
+                    }
+                });
+            }
             function updateIndexes(){
                 const checks = table.querySelectorAll('input[type=checkbox]');
                 checks.forEach((c,i)=>c.value=i);
+                updateFieldOptions();
             }
+            table.closest('form').addEventListener('submit',prepareSave);
+            table.querySelectorAll('tr').forEach(initRow);
             updateIndexes();
         })();
         </script>
