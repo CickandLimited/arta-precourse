@@ -49,14 +49,23 @@ class Invitation_Manager {
 
         list($user_id, $password) = $this->create_customer_user($email);
 
-        if (!$user_id || !$password) {
+        if (!$user_id) {
             ayotte_log_message('ERROR', "Failed to create account for $email", 'email invitation manager');
             return false;
         }
 
         $sender = new Ayotte_Email_Sender();
-        $sent = $sender->send_credentials($email, $password);
-        ayotte_log_message($sent ? 'INFO' : 'ERROR', ($sent ? 'Sent' : 'Failed to send') . " credentials to $email", 'email invitation manager');
+        if ($password === null) {
+            $sent = $sender->send_existing_account_notice($email);
+            ayotte_log_message($sent ? 'INFO' : 'ERROR',
+                ($sent ? 'Sent existing account notice to ' : 'Failed to send notice to ') . $email,
+                'email invitation manager');
+        } else {
+            $sent = $sender->send_credentials($email, $password);
+            ayotte_log_message($sent ? 'INFO' : 'ERROR',
+                ($sent ? 'Sent' : 'Failed to send') . " credentials to $email",
+                'email invitation manager');
+        }
         return $sent;
     }
 }

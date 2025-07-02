@@ -19,5 +19,19 @@ class Ayotte_Email_Sender {
         $message = "Hi,\n\nYour account has been created.\nUsername: $email\nPassword: $password\nLogin here: $login_link\n\nThanks,\nAyotte Training";
         return $this->send_email($email, $subject, $message);
     }
+
+    /**
+     * Notify an existing user about portal access.
+     */
+    public function send_existing_account_notice($email) {
+        $login_link = wp_login_url(site_url('/precourse-forms'));
+        $reset_link = wp_lostpassword_url();
+        $subject    = 'Precourse Portal Access';
+        $message    = "Hi,\n\nYou already have an account for the Precourse Portal." .
+            "\nLogin here: $login_link" .
+            "\nReset your password here: $reset_link" .
+            "\n\nThanks,\nAyotte Training";
+        return $this->send_email($email, $subject, $message);
+    }
 }
 ?>
