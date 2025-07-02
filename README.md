@@ -27,6 +27,8 @@ Forms created through **Custom Forms** are stored in a separate database. You ca
 
 The preview link in the Custom Forms list opens the form inside the admin area using the same shortcode.
 
+Checkbox fields include a **Minimum checked** setting to require a certain number of options be selected.
+
 ## Shortcodes
 
 - ``[ayotte_precourse_form]`` – Displays the built‑in precourse form. Provide `id` to display a custom form by ID, e.g. ``[ayotte_precourse_form id="123"]``.

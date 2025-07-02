@@ -98,6 +98,17 @@
           if(err) err.textContent=msg;
         }
       });
+      form.querySelectorAll('p[data-min-check]').forEach(p=>{
+        const min=parseInt(p.dataset.minCheck,10)||0;
+        if(min>0){
+          const cnt=p.querySelectorAll('input[type=checkbox]:checked').length;
+          if(cnt<min){
+            ok=false;
+            const err=p.querySelector('.field-error');
+            if(err) err.textContent='Select at least '+min;
+          }
+        }
+      });
       return ok;
     }
 

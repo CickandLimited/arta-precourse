@@ -51,6 +51,7 @@ class Custom_DB {
         $tables = [
             'custom_forms' => "CREATE TABLE custom_forms (\n              id INT AUTO_INCREMENT PRIMARY KEY,\n              name VARCHAR(255) NOT NULL\n            )",
             'custom_form_fields' => "CREATE TABLE custom_form_fields (\n              id INT AUTO_INCREMENT PRIMARY KEY,\n              form_id INT NOT NULL,\n              label VARCHAR(255),\n              type VARCHAR(50),\n              options TEXT,\n              required TINYINT(1) DEFAULT 0,
+              min_checked INT DEFAULT 0,
               conditions TEXT
               validation_rules TEXT
             )",
@@ -69,6 +70,7 @@ class Custom_DB {
             'custom_form_fields' => [
                 'options'  => "ALTER TABLE custom_form_fields ADD COLUMN options TEXT",
                 'required' => "ALTER TABLE custom_form_fields ADD COLUMN required TINYINT(1) DEFAULT 0",
+                'min_checked' => "ALTER TABLE custom_form_fields ADD COLUMN min_checked INT DEFAULT 0",
                 'validation_rules' => "ALTER TABLE custom_form_fields ADD COLUMN validation_rules TEXT",
                 'conditions' => "ALTER TABLE custom_form_fields ADD COLUMN conditions TEXT"
             ],
