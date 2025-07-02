@@ -169,4 +169,23 @@ function ayotte_send_progress_reminders() {
         }
     }
 }
+
+// Daily invite cleanup
+if (!wp_next_scheduled('ayotte_invite_cleanup')) {
+    wp_schedule_event(time(), 'daily', 'ayotte_invite_cleanup');
+}
+add_action('ayotte_invite_cleanup', 'ayotte_cleanup_expired_invites');
+
+function ayotte_cleanup_expired_invites() {
+    global $wpdb;
+    $like    = $wpdb->esc_like('ayotte_invite_') . '%';
+    $options = $wpdb->get_col($wpdb->prepare("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", $like));
+
+    foreach ($options as $option) {
+        $data = get_option($option);
+        if (!$data || (isset($data['expires']) && $data['expires'] < time())) {
+            delete_option($option);
+        }
+    }
+}
 ?>

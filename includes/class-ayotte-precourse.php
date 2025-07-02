@@ -104,6 +104,7 @@ class Ayotte_Precourse {
             update_user_meta($user_id, 'ayotte_precourse_email', $email);
             update_user_meta($user_id, 'ayotte_precourse_token', $token);
             ayotte_log_message('INFO', "Linked token $token to user $user_id", 'email invitation manager');
+            delete_option("ayotte_invite_{$token}");
             unset($_SESSION['ayotte_precourse_email'], $_SESSION['ayotte_precourse_token']);
         }
     }
