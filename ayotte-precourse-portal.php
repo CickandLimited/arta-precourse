@@ -40,9 +40,16 @@ function ayotte_precourse_enqueue_admin($hook) {
         [],
         AYOTTE_PRECOURSE_VERSION
     );
+    $cdn = 'https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js';
+    $local = plugin_dir_url(__FILE__) . 'assets/js/interact.min.js';
+    $use_local = false;
+    $resp = wp_remote_head($cdn);
+    if (is_wp_error($resp) || wp_remote_retrieve_response_code($resp) !== 200) {
+        $use_local = true;
+    }
     wp_enqueue_script(
         'interactjs',
-        'https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js',
+        $use_local ? $local : $cdn,
         [],
         AYOTTE_PRECOURSE_VERSION,
         true
