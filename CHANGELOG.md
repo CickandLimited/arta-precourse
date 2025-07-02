@@ -228,3 +228,4 @@
 - 2025-07-01 b119ecb Merge pull request #132 from CickandLimited/codex/add-anchor-link-for-download-in-event-listener
 - 2025-07-01 5c185bf Add PDF preview with image transforms
 - 2025-07-01 e8ea18b Merge pull request #133 from CickandLimited/codex/implement-admin-page-for-pdf-generation
+- 2025-07-02 fbba79e Fix custom_form_fields schema comma
