@@ -51,9 +51,9 @@ class Custom_DB {
         $tables = [
             'custom_forms' => "CREATE TABLE custom_forms (\n              id INT AUTO_INCREMENT PRIMARY KEY,\n              name VARCHAR(255) NOT NULL\n            )",
             'custom_form_fields' => "CREATE TABLE custom_form_fields (\n              id INT AUTO_INCREMENT PRIMARY KEY,\n              form_id INT NOT NULL,\n              label VARCHAR(255),\n              type VARCHAR(50),\n              options TEXT,\n              required TINYINT(1) DEFAULT 0,
-              min_checked INT DEFAULT 0,
-              conditions TEXT
-              validation_rules TEXT
+                min_checked INT DEFAULT 0,
+                conditions TEXT,
+                validation_rules TEXT
             )",
             'custom_form_submissions' => "CREATE TABLE custom_form_submissions (\n              id INT AUTO_INCREMENT PRIMARY KEY,\n              form_id INT NOT NULL,\n              user_id INT NOT NULL,\n              submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n              data LONGTEXT,\n              status VARCHAR(20) NOT NULL DEFAULT 'draft',\n              locked TINYINT(1) DEFAULT 0\n            )"
         ];
