@@ -544,9 +544,17 @@ class Ayotte_Admin_Panel {
         if (!$user_id) {
             wp_send_json_error(['message' => 'Invalid user']);
         }
+
+        $interact = isset($body['interact_loaded']) ? (bool)$body['interact_loaded'] : (isset($_GET['interact_loaded']) ? (bool)$_GET['interact_loaded'] : true);
+        if (!$interact) {
+            ayotte_log_message('ERROR', 'InteractJS failed to load for generate_pdf', 'admin panel');
+            wp_send_json_error(['message' => 'InteractJS failed to load']);
+        }
+
         $transforms = $body['transforms'] ?? [];
         $url = Ayotte_PDF_Generator::create_user_pdf($user_id, $transforms);
         if ($url instanceof WP_Error) {
+            ayotte_log_message('ERROR', 'PDF generation failed: ' . $url->get_error_message(), 'admin panel');
             wp_send_json_error(['message' => $url->get_error_message()]);
         }
         wp_send_json_success(['url' => $url]);
@@ -560,7 +568,18 @@ class Ayotte_Admin_Panel {
         if (!$user_id) {
             wp_send_json_error(['message' => 'Invalid user']);
         }
+
+        $interact = isset($_GET['interact_loaded']) ? (bool)$_GET['interact_loaded'] : true;
+        if (!$interact) {
+            ayotte_log_message('ERROR', 'InteractJS failed to load for prepare_pdf', 'admin panel');
+            wp_send_json_error(['message' => 'InteractJS failed to load']);
+        }
+
         $html = Ayotte_PDF_Generator::build_user_html($user_id, [], true);
+        if ($html instanceof WP_Error) {
+            ayotte_log_message('ERROR', 'Prepare PDF failed: ' . $html->get_error_message(), 'admin panel');
+            wp_send_json_error(['message' => $html->get_error_message()]);
+        }
         wp_send_json_success(['html' => $html]);
     }
 

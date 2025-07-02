@@ -69,3 +69,4 @@
 .ayotte-pdf-dialog{background:#fff;padding:20px;max-height:90%;overflow:auto;max-width:90%;}
 .ayotte-pdf-preview img{max-width:100%;display:block;}
 .ayotte-pdf-preview input[type=range]{width:100%;}
+.pdf-msg{color:#c00;margin-bottom:10px;}
