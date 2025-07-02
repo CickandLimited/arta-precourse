@@ -75,7 +75,21 @@ class Ayotte_Form_Manager {
      */
     public function render_dashboard() {
         if (!is_user_logged_in()) return '<p>Please log in first.</p>';
-        $user_id  = get_current_user_id();
+
+        $current_id = get_current_user_id();
+        $user_id    = $current_id;
+        if (current_user_can('manage_options') && !empty($_GET['user_id'])) {
+            $user_id = intval($_GET['user_id']);
+        }
+
+        $form_id = intval($_GET['form_id'] ?? 0);
+        if ($form_id) {
+            if ($user_id !== $current_id && current_user_can('manage_options')) {
+                return $this->render_readonly_submission($form_id, $user_id);
+            }
+            return $this->render_form(['id' => $form_id]);
+        }
+
         $assigned = (array) get_user_meta($user_id, 'ayotte_assigned_forms', true);
 
         $tracker = new Ayotte_Progress_Tracker();
@@ -117,7 +131,7 @@ class Ayotte_Form_Manager {
                 $status   = $status_map[$form_id] ?? $tracker->get_form_status($form_id, $user_id);
                 $unlocked = get_user_meta($user_id, "ayotte_form_{$form_id}_unlocked", true);
 
-                $url  = esc_url(add_query_arg('form_id', $form_id, site_url('/precourse-form')));
+                $url  = esc_url(add_query_arg('form_id', $form_id, site_url('/precourse-forms')));
                 $name = Ayotte_Progress_Tracker::get_form_name($form_id);
 
                 $submitted     = in_array($status, ['completed', 'locked'], true);
