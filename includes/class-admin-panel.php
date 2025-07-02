@@ -442,16 +442,27 @@ class Ayotte_Admin_Panel {
     public function send_bulk_invites() {
         if (!current_user_can('manage_options')) wp_die('Forbidden');
         $body = json_decode(file_get_contents('php://input'), true);
-        $emails = array_filter(array_map('sanitize_email', $body['emails'] ?? []));
-        $count  = 0;
+        $emails   = array_filter(array_map('sanitize_email', $body['emails'] ?? []));
+        $results  = [];
+        $success  = 0;
+        $failure  = 0;
         foreach ($emails as $email) {
             if ($email) {
-                (new Invitation_Manager())->send_invite_email($email);
-                $count++;
+                $sent = (new Invitation_Manager())->send_invite_email($email);
+                $results[] = ['email' => $email, 'success' => $sent];
+                ayotte_log_message($sent ? 'INFO' : 'ERROR',
+                    ($sent ? 'Invite succeeded for ' : 'Invite failed for ') . $email,
+                    'admin panel');
+                if ($sent) {
+                    $success++;
+                } else {
+                    $failure++;
+                }
             }
         }
-        ayotte_log_message('INFO', "Sent {$count} invitations", 'admin panel');
-        wp_send_json_success(['message' => "Sent $count invitations"]);
+        ayotte_log_message('INFO', "Bulk invite results: {$success} success, {$failure} failed", 'admin panel');
+        $message = "{$success} succeeded, {$failure} failed";
+        wp_send_json_success(['message' => $message, 'results' => $results]);
     }
 
     /**
