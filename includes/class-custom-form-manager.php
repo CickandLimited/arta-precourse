@@ -554,9 +554,11 @@ class Custom_Form_Manager {
                     <?php $name = 'field_'.$f['id']; ?>
                     <?php
                         $min_attr = '';
-                        $min_check = max(intval($f['min_checked']), $f['required'] ? 1 : 0);
-                        if ($min_check > 0) {
-                            $min_attr = ' data-min-check="' . $min_check . '"';
+                        if ($f['type'] === 'checkbox') {
+                            $min_check = max(intval($f['min_checked']), $f['required'] ? 1 : 0);
+                            if ($min_check > 0) {
+                                $min_attr = ' data-min-check="' . $min_check . '"';
+                            }
                         }
                     ?>
                     <p<?php echo $f['conditions'] ? ' data-conditions="'.esc_attr($f['conditions']).'"' : ''; echo $min_attr; ?>>
