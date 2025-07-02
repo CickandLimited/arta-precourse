@@ -5,7 +5,7 @@ Ayotte Precourse Portal is a WordPress plugin that manages an invitation based w
 ## Setup
 
 1. Copy this plugin's folder into `wp-content/plugins/` on your WordPress site and activate **Ayotte Precourse Portal**.
-2. Activation automatically creates the `Precourse Forms` dashboard page. Any old `Precourse Form` page is removed.
+2. Activation automatically creates the `Precourse Forms` dashboard page (accessible at `/precourse-forms`). Any old `Precourse Form` page is removed.
 3. A new **Precourse Portal** menu will appear in the WordPress admin with tools for invites, debugging, progress tracking and form management.
 4. Configure an external forms database from **Precourse Portal → Form DB Settings** if you plan to use the custom form manager.
 
@@ -14,7 +14,7 @@ Ayotte Precourse Portal is a WordPress plugin that manages an invitation based w
 - Use the **Precourse Portal** admin page to send invitations. Each address receives credentials and a link to complete registration.
 - Assign available forms to students from **Student Progress**. Progress percentages update automatically when forms are submitted.
 - Manage and preview forms under **Custom Forms**. Preview opens a live rendering of the form inside the admin area.
-- Students visit the `Precourse Forms` page to access their dashboard and fill out each assigned form.
+- Students visit the `Precourse Forms` page (`/precourse-forms`) to access their dashboard and fill out each assigned form.
 - Logs are viewable from the **Debug Console** submenu.
 
 ## Custom Form Manager

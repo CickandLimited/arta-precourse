@@ -241,7 +241,7 @@ class Ayotte_Admin_Panel {
                     $view_url = esc_url(add_query_arg([
                         'form_id' => $form_id,
                         'user_id' => $user->ID,
-                    ], site_url('/precourse-form')));
+                    ], site_url('/precourse-forms')));
                     $item .= ' <a href="' . $view_url . '">View</a>';
                 }
 
